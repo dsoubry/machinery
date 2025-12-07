@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <title>Goedkoopste elektriciteitsuren (Luminus Dynamic)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color-scheme: light dark;
+    }
+
+    body {
+      margin: 0;
+      padding: 1.5rem;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.6rem;
+    }
+
+    .card {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.2rem;
+      font-size: 0.9rem;
+      color: #9ca3af;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 1rem;
+      align-items: flex-end;
+    }
+
+    .control-group {
+      flex: 1 1 160px;
+    }
+
+    select, input[type="number"] {
+      width: 100%;
+      padding: 0.5rem 0.6rem;
+      border-radius: 0.75rem;
+      border: 1px solid #4b5563;
+      background: #020617;
+      color: #e5e7eb;
+      box-sizing: border-box;
+    }
+
+    button {
+      padding: 0.6rem 1.2rem;
+      border-radius: 999px;
+      border: none;
+      background: #22c55e;
+      color: #022c22;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 10px 20px rgba(22, 163, 74, 0.35);
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.08s ease;
+      white-space: nowrap;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 28px rgba(22, 163, 74, 0.4);
+      background: #16a34a;
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 8px 16px rgba(22, 163, 74, 0.35);
+    }
+
+    .results {
+      margin-top: 1.5rem;
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 800px) {
+      .results {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .summary {
+      border-radius: 1rem;
+      padding: 1rem;
+      background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.3), rgba(15, 23, 42, 0.9));
+      border: 1px solid rgba(34, 197, 94, 0.5);
+      min-height: 110px;
+    }
+
+    .summary h2 {
+      margin-top: 0;
+      font-size: 1.1rem;
+    }
+
+    .summary p {
+      margin: 0.15rem 0;
+      font-size: 0.9rem;
+    }
+
+    .summary strong {
+      color: #bbf7d0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      overflow: hidden;
+      border-radius: 1rem;
+    }
+
+    thead {
+      background: #020617;
+    }
+
+    th, td {
+      padding: 0.4rem 0.5rem;
+      text-align: right;
+      border-bottom: 1px solid #1f2937;
+      white-space: nowrap;
+    }
+
+    th:first-child, td:first-child {
+      text-align: left;
+    }
+
+    tbody tr:nth-child(even) {
+      background: rgba(15, 23, 42, 0.7);
+    }
+
+    .best-block {
+      background: rgba(34, 197, 94, 0.12) !important;
+      position: relative;
+    }
+
+    .best-block::before {
+      content: "★";
+      position: absolute;
+      left: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.7rem;
+      color: #22c55e;
+    }
+
+    .bar-cell {
+      width: 35%;
+    }
+
+    .bar-wrapper {
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(31, 41, 55, 0.9);
+      overflow: hidden;
+    }
+
+    .bar {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #22c55e, #fbbf24, #f97316, #ef4444);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .note {
+      margin-top: 0.75rem;
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    .error {
+      margin-top: 0.5rem;
+      color: #fecaca;
+      font-size: 0.85rem;
+    }
+
+    .small {
+      font-size: 0.75rem;
+    }
+
+    #statusBox {
+      margin-top: 0.75rem;
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Goedkoopste verbruiksmomenten – Luminus Dynamic</h1>
+    <p class="small">
+      Deze pagina leest automatisch de uurprijzen in (via een JSON-bestand in deze repo) en zoekt het goedkoopste tijdsblok
+      voor je wasmachine, vaatwas, droogkast, ...
+    </p>
+
+    <div id="statusBox">Data aan het laden...</div>
+
+    <div class="controls">
+      <div class="control-group">
+        <label for="daySelect">Dag</label>
+        <select id="daySelect">
+          <option value="0">Vandaag</option>
+          <option value="1">Morgen</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="durationInput">Duur verbruik (uren)</label>
+        <input id="durationInput" type="number" min="1" max="24" value="2" step="1">
+      </div>
+
+      <div class="control-group" style="flex:0 0 auto;">
+        <button id="calcBtn">Bereken goedkoopste blok</button>
+      </div>
+    </div>
+
+    <div id="errorBox" class="error" style="display:none;"></div>
+
+    <div class="results">
+      <div class="summary" id="summaryBox">
+        <h2>Samenvatting</h2>
+        <p>Nog geen gegevens. Wacht tot de data geladen is.</p>
+        <p class="note">
+          Tip: je batterij met slimme BMS optimaliseert al automatisch.
+          Deze tool is vooral handig om toestellen met vaste duur slim te plannen.
+        </p>
+      </div>
+
+      <div>
+        <table>
+          <thead>
+            <tr>
+              <th>Uurblok</th>
+              <th>Prijs (€/MWh)</th>
+              <th class="bar-cell">Relatief niveau</th>
+            </tr>
+          </thead>
+          <tbody id="priceTableBody">
+            <!-- Dynamisch -->
+          </tbody>
+        </table>
+        <div class="note">
+          Balkjes tonen de relatieve prijs t.o.v. de duurste uurprijs van de geselecteerde dag.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let LUMINUS_ROWS = [];
+    let LUMINUS_DATES = { today: null, tomorrow: null };
+
+    function findCheapestBlock(prices, duration) {
+      const n = prices.length;
+      if (duration > n || duration <= 0) return null;
+
+      let sum = 0;
+      for (let i = 0; i < duration; i++) sum += prices[i];
+
+      let bestSum = sum;
+      let bestStart = 0;
+
+      for (let i = 1; i <= n - duration; i++) {
+        sum = sum - prices[i - 1] + prices[i + duration - 1];
+        if (sum < bestSum) {
+          bestSum = sum;
+          bestStart = i;
+        }
+      }
+
+      return { startIndex: bestStart, total: bestSum, avg: bestSum / duration, duration };
+    }
+
+    function renderTable(rows, useTomorrow, bestBlock) {
+      const tbody = document.getElementById("priceTableBody");
+      tbody.innerHTML = "";
+
+      if (!rows || rows.length === 0) return;
+
+      const prices = rows.map(r => useTomorrow ? r.tomorrow : r.today);
+      const maxPrice = Math.max(...prices);
+
+      rows.forEach((row, idx) => {
+        const tr = document.createElement("tr");
+
+        const inBest =
+          bestBlock &&
+          idx >= bestBlock.startIndex &&
+          idx < bestBlock.startIndex + bestBlock.duration;
+
+        if (inBest) {
+          tr.classList.add("best-block");
+        }
+
+        const tdHour = document.createElement("td");
+        tdHour.textContent = row.range;
+
+        const tdPrice = document.createElement("td");
+        const price = useTomorrow ? row.tomorrow : row.today;
+        tdPrice.textContent = price.toFixed(2).replace(".", ",") + " €";
+
+        const tdBar = document.createElement("td");
+        tdBar.classList.add("bar-cell");
+        const wrapper = document.createElement("div");
+        wrapper.classList.add("bar-wrapper");
+        const bar = document.createElement("div");
+        bar.classList.add("bar");
+        const ratio = maxPrice > 0 ? (price / maxPrice) * 100 : 0;
+        bar.style.width = ratio.toFixed(1) + "%";
+        wrapper.appendChild(bar);
+        tdBar.appendChild(wrapper);
+
+        tr.appendChild(tdHour);
+        tr.appendChild(tdPrice);
+        tr.appendChild(tdBar);
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function formatEuroPerKwh(eurPerMWh) {
+      const eurPerKWh = eurPerMWh / 1000;
+      return eurPerKWh.toFixed(4).replace(".", ",") + " €/kWh";
+    }
+
+    function updateSummary(useTomorrow, duration) {
+      const summaryBox = document.getElementById("summaryBox");
+      const errorBox = document.getElementById("errorBox");
+      errorBox.style.display = "none";
+      errorBox.textContent = "";
+
+      if (!LUMINUS_ROWS.length) {
+        summaryBox.innerHTML = "<h2>Geen gegevens</h2><p>Er zijn geen prijzen geladen.</p>";
+        document.getElementById("priceTableBody").innerHTML = "";
+        return;
+      }
+
+      const prices = LUMINUS_ROWS.map(r => useTomorrow ? r.tomorrow : r.today);
+
+      if (duration > prices.length) {
+        errorBox.style.display = "block";
+        errorBox.textContent = "De ingestelde duur is langer dan het aantal beschikbare uurblokken.";
+        return;
+      }
+
+      const best = findCheapestBlock(prices, duration);
+      if (!best) {
+        summaryBox.innerHTML = "<h2>Geen resultaat</h2><p>Er kon geen goedkoopste blok berekend worden.</p>";
+        renderTable(LUMINUS_ROWS, useTomorrow, null);
+        return;
+      }
+
+      const startRow = LUMINUS_ROWS[best.startIndex];
+      const endRow = LUMINUS_ROWS[best.startIndex + duration - 1];
+      const endTimeMatch = endRow.range.match(/–\s*(\d{2}\.\d{2}u)$/);
+      const endTime = endTimeMatch ? endTimeMatch[1] : "einde blok";
+
+      const labelDag = useTomorrow ? "morgen" : "vandaag";
+      const dateLabel = useTomorrow ? LUMINUS_DATES.tomorrow : LUMINUS_DATES.today;
+
+      const avgPerMWh = best.avg;
+      const avgPerKWh = formatEuroPerKwh(avgPerMWh);
+
+      summaryBox.innerHTML = `
+        <h2>Goedkoopste blok (${labelDag}${dateLabel ? " – " + dateLabel : ""})</h2>
+        <p><strong>Start:</strong> ${startRow.range.split("–")[0].trim()}</p>
+        <p><strong>Einde:</strong> ${endTime}</p>
+        <p><strong>Duur:</strong> ${duration} uur<
