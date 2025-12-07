@@ -2,8 +2,8 @@ import requests
 import json
 from datetime import datetime, timezone
 
-# De API voor dynamische prijzen
-API_URL = "https://my.luminusbusiness.be/api/market-info/dynamic-prices"
+# Nieuwe, correcte API endpoint
+API_URL = "https://my.luminusbusiness.be/api/gas-electricity/dynamic-price"
 
 def fetch_prices():
     headers = {
@@ -14,42 +14,37 @@ def fetch_prices():
     return resp.json()
 
 def convert(data):
-    # De API bevat velden zoals:
-    # {
-    #   "labels": ["00:00", "01:00", ...],
-    #   "today": [55.1, 48.2, ...],
-    #   "tomorrow": [60.2, 50.1, ...]
-    # }
-
     labels = data.get("labels", [])
-    today = data.get("today", [])
-    tomorrow = data.get("tomorrow", [])
+    today_vals = data.get("valuesToday", [])
+    tomorrow_vals = data.get("valuesTomorrow", [])
 
     rows = []
+
     for i in range(len(labels) - 1):
         start = labels[i]
-        end = labels[i + 1]
+        end = labels[i+1]
         range_txt = f"{start}u – {end}u"
 
         rows.append({
             "range": range_txt,
-            "today": float(today[i]),
-            "tomorrow": float(tomorrow[i])
+            "today": float(today_vals[i]),
+            "tomorrow": float(tomorrow_vals[i])
         })
 
     return {
         "source": API_URL,
         "date_fetched": datetime.now(timezone.utc).isoformat(),
-        "date_today": data.get("labelsDateToday"),
-        "date_tomorrow": data.get("labelsDateTomorrow"),
+        "date_today": data.get("dateToday"),
+        "date_tomorrow": data.get("dateTomorrow"),
         "rows": rows
     }
 
 def main():
+    print("Prijsgegevens ophalen van Luminus API...")
     json_data = fetch_prices()
-    converted = convert(json_data)
 
-    print("Gevonden uurblokken:", len(converted["rows"]))
+    converted = convert(json_data)
+    print("Uurblokken gevonden:", len(converted["rows"]))
 
     with open("luminus-prices.json", "w", encoding="utf-8") as f:
         json.dump(converted, f, ensure_ascii=False, indent=2)
