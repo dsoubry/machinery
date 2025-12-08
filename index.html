@@ -94,12 +94,12 @@
       background: rgba(15, 23, 42, 0.7);
     }
 
-    .best-block {
+    .best-single-hour {
       background: rgba(34, 197, 94, 0.12) !important;
       position: relative;
     }
 
-    .best-block::before {
+    .best-single-hour::before {
       content: "★";
       position: absolute;
       left: 4px;
@@ -149,12 +149,12 @@
         position: relative;
       }
       
-      tbody tr.best-block {
+      tbody tr.best-single-hour {
         background: rgba(34, 197, 94, 0.12);
         border: 1px solid rgba(34, 197, 94, 0.3);
       }
       
-      tbody tr.best-block::before {
+      tbody tr.best-single-hour::before {
         content: "★ LAAGSTE PRIJS";
         position: absolute;
         top: 0.5rem;
@@ -244,7 +244,7 @@
     </p>
 
     <div class="status-box">
-      Laatste update: 08/12/2025 om 16:38 • Data voor: maandag 08 december 2025
+      Laatste update: 08/12/2025 om 16:39 • Data voor: maandag 08 december 2025
     </div>
 
     <div class="results">
@@ -258,11 +258,8 @@
         </div>
 
         <div class="tips">
-          <h3>💡 Energiebespaartips</h3>
-          <p><strong>Gebruik apparaten tijdens groene uren</strong> (★ in tabel)</p>
-          <p><strong>Vermijd hoog verbruik tijdens piekuren</strong></p>
-          <p><strong>Plan wasmachine/vaatwas</strong> voor goedkoopste momenten</p>
-          <p><strong>Laad elektrische auto op</strong> tijdens laagste prijzen</p>
+          <h3>🏠 Beste tijden voor huishoudtoestellen</h3>
+          <p><strong>🔌 Korte toestellen (1u):</strong> 03:00 - €7.36/MWh</p><p><strong>🧺 Wasmachine (2u):</strong> 02:00-03:00 - €9.20/MWh</p><p><strong>🍽️ Vaatwas (3u):</strong> 01:00-03:00 - €10.02/MWh</p><p><strong>👕 Droogkast (4u):</strong> 01:00-04:00 - €10.73/MWh</p><p class="note">💡 Plan je apparaten om te starten aan het begin van deze tijdsblokken</p>
         </div>
       </div>
 
@@ -310,7 +307,7 @@
                 </td>
             </tr>
         
-            <tr class="best-block">
+            <tr class="best-single-hour">
                 <td data-label="Uurblok">03.00u – 04.00u</td>
                 <td data-label="Prijs (€/MWh)">7.36 €</td>
                 <td data-label="Prijs (ct/kWh)">0.74 ct/kWh</td>
