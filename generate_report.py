@@ -252,25 +252,6 @@ def generate_html_report(data):
       color: #9ca3af;
     }}
 
-    .chart-container {{
-      margin-top: 1rem;
-      border-radius: 1rem;
-      padding: 1rem;
-      background: rgba(2, 6, 23, 0.5);
-      border: 1px solid rgba(75, 85, 99, 0.5);
-    }}
-
-    .chart-container h3 {{
-      margin-top: 0;
-      font-size: 1rem;
-      color: #e5e7eb;
-    }}
-
-    canvas {{
-      max-width: 100%;
-      height: 200px;
-    }}
-
     .tips {{
       margin-top: 1rem;
       padding: 1rem;
@@ -321,11 +302,6 @@ def generate_html_report(data):
           <p><strong>Plan wasmachine/vaatwas</strong> voor goedkoopste momenten</p>
           <p><strong>Laad elektrische auto op</strong> tijdens laagste prijzen</p>
         </div>
-
-        <div class="chart-container">
-          <h3>Prijsverloop</h3>
-          <canvas id="priceChart"></canvas>
-        </div>
       </div>
 
       <div>
@@ -353,54 +329,6 @@ def generate_html_report(data):
       <a href="https://transparency.entsoe.eu/" style="color: #22c55e;">ENTSO-E</a>
     </div>
   </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    // Chart with dark theme
-    const ctx = document.getElementById('priceChart').getContext('2d');
-    const chartData = {{
-      labels: {json.dumps([f"{p['hour']:02d}:00" for p in prices])},
-      datasets: [{{
-        label: 'Prijs (€/MWh)',
-        data: {json.dumps([p['price_eur_mwh'] for p in prices])},
-        borderColor: '#22c55e',
-        backgroundColor: 'rgba(34, 197, 94, 0.1)',
-        borderWidth: 2,
-        fill: true,
-        tension: 0.1,
-        pointBackgroundColor: '#22c55e',
-        pointBorderColor: '#22c55e',
-        pointRadius: 3
-      }}]
-    }};
-    
-    new Chart(ctx, {{
-      type: 'line',
-      data: chartData,
-      options: {{
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {{
-          legend: {{ display: false }}
-        }},
-        scales: {{
-          x: {{
-            ticks: {{ color: '#9ca3af' }},
-            grid: {{ color: 'rgba(156, 163, 175, 0.1)' }}
-          }},
-          y: {{
-            ticks: {{ color: '#9ca3af' }},
-            grid: {{ color: 'rgba(156, 163, 175, 0.1)' }},
-            title: {{
-              display: true,
-              text: '€/MWh',
-              color: '#9ca3af'
-            }}
-          }}
-        }}
-      }}
-    }});
-  </script>
 </body>
 </html>'''
     
