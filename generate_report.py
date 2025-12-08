@@ -41,20 +41,18 @@ def format_price_table(prices):
         
         # Highlight lowest prices
         row_class = ""
-        star = ""
         if price['price_eur_mwh'] == min_price:
             row_class = ' class="best-block"'
-            star = "★"
         
         # Calculate relative bar width
         ratio = (price['price_eur_mwh'] / max_price) * 100 if max_price > 0 else 0
         
         html += f'''
             <tr{row_class}>
-                <td>{time_range}</td>
-                <td>{price['price_eur_mwh']:.2f} €</td>
-                <td>{price['price_cent_kwh']:.2f} ct/kWh</td>
-                <td class="bar-cell">
+                <td data-label="Uurblok">{time_range}</td>
+                <td data-label="Prijs (€/MWh)">{price['price_eur_mwh']:.2f} €</td>
+                <td data-label="Prijs (ct/kWh)">{price['price_cent_kwh']:.2f} ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
                     <div class="bar-wrapper">
                         <div class="bar" style="width: {ratio:.1f}%"></div>
                     </div>
@@ -234,6 +232,76 @@ def generate_html_report(data):
       background: linear-gradient(90deg, #22c55e, #fbbf24, #f97316, #ef4444);
       width: 0%;
       transition: width 0.3s ease;
+    }}
+
+    /* Mobile responsive table */
+    @media (max-width: 600px) {{
+      table, thead, tbody, th, td, tr {{
+        display: block;
+      }}
+      
+      thead tr {{
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+      }}
+      
+      tbody tr {{
+        border: 1px solid #1f2937;
+        border-radius: 0.5rem;
+        margin-bottom: 0.75rem;
+        padding: 0.75rem;
+        background: rgba(15, 23, 42, 0.7);
+        position: relative;
+      }}
+      
+      tbody tr.best-block {{
+        background: rgba(34, 197, 94, 0.12);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+      }}
+      
+      tbody tr.best-block::before {{
+        content: "★ LAAGSTE PRIJS";
+        position: absolute;
+        top: 0.5rem;
+        right: 0.75rem;
+        font-size: 0.7rem;
+        color: #22c55e;
+        font-weight: bold;
+      }}
+      
+      td {{
+        border: none;
+        border-bottom: 1px solid #1f2937;
+        position: relative;
+        padding: 0.4rem 0 0.4rem 45%;
+        text-align: left !important;
+        white-space: normal;
+      }}
+      
+      td:last-child {{
+        border-bottom: none;
+      }}
+      
+      td:before {{
+        content: attr(data-label) ": ";
+        position: absolute;
+        left: 0;
+        width: 40%;
+        padding-right: 10px;
+        white-space: nowrap;
+        color: #9ca3af;
+        font-weight: bold;
+        font-size: 0.75rem;
+      }}
+      
+      .bar-cell {{
+        width: auto;
+      }}
+      
+      .bar-wrapper {{
+        margin-top: 0.25rem;
+      }}
     }}
 
     .note {{
