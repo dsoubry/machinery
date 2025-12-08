@@ -1,176 +1,446 @@
 #!/usr/bin/env python3
 """
-ENTSO-E Day-Ahead Price Scraper
-Correct filtering (A44), hourly only, no duplicates.
-Matches exactly the dataset from:
-https://transparency.entsoe.eu/market/energyPrices
+Belgian Day-Ahead Price Scraper - CORRECTED VERSION
+Fixes data accuracy issues and improves ENTSO-E API handling
 """
 
 import os
 import sys
 import json
 import requests
+import pandas as pd
 from datetime import datetime, timedelta, timezone
 import xml.etree.ElementTree as ET
-import pandas as pd
 
-ENTSOE_API_URL = "https://web-api.tp.entsoe.eu/api"
-ENTSOE_TOKEN = os.getenv("ENTSOE_TOKEN")
-BE_BIDDING_ZONE = "10YBE----------2"   # Official Belgian zone
+# ENTSO-E API Configuration
+ENTSOE_TOKEN = os.getenv('ENTSOE_TOKEN', '')
+ENTSOE_API_URL = 'https://web-api.tp.entsoe.eu/api'
+BELGIUM_DOMAIN = '10YBE----------2'
 
-
-# ------------------------- Helper functions -------------------------
-
-def ensure_token():
+def get_entsoe_token():
+    """Get ENTSO-E API token from environment or exit with instructions"""
+    global ENTSOE_TOKEN
+    
     if not ENTSOE_TOKEN:
-        print("❌ Missing ENTSO-E API token (ENTSOE_TOKEN).")
+        print("❌ ENTSO-E API token niet gevonden!")
+        print("🔧 Vereiste stappen:")
+        print("1. Ga naar https://transparency.entsoe.eu/")
+        print("2. Maak een gratis account aan") 
+        print("3. Vraag een 'Restful API' token aan")
+        print("4. Voeg ENTSOE_TOKEN toe als GitHub secret")
         sys.exit(1)
+    
+    return ENTSOE_TOKEN
 
+def validate_price_data(prices):
+    """Validate price data for suspicious values"""
+    if not prices:
+        return False, "No prices found"
+    
+    price_values = [p['price_eur_mwh'] for p in prices]
+    
+    # Check for reasonable price ranges (Belgian market typically 0-300 €/MWh)
+    max_price = max(price_values)
+    min_price = min(price_values)
+    avg_price = sum(price_values) / len(price_values)
+    
+    # Validation checks
+    issues = []
+    
+    if max_price > 500:
+        issues.append(f"Suspiciously high price: €{max_price:.2f}/MWh")
+    
+    if min_price < 0:
+        issues.append(f"Negative price detected: €{min_price:.2f}/MWh")
+    
+    if max_price > 10 * avg_price and max_price > 100:
+        issues.append(f"Price spike detected: €{max_price:.2f}/MWh (avg: €{avg_price:.2f}/MWh)")
+    
+    if len(set(price_values)) < 5:
+        issues.append("Too few unique prices - possible data corruption")
+    
+    if len(prices) not in [24, 48, 96]:  # hourly, half-hourly, quarter-hourly
+        issues.append(f"Unexpected number of price points: {len(prices)}")
+    
+    if issues:
+        print("⚠️  Data validation warnings:")
+        for issue in issues:
+            print(f"   - {issue}")
+        
+        # For severe issues, reject the data
+        if max_price > 1000 or min_price < -100:
+            return False, "Extreme price values detected"
+    
+    return True, "Data validation passed"
 
-def detect_ns(root):
-    if root.tag.startswith("{"):
-        uri = root.tag.split("}")[0][1:]
-        return {"ns": uri}
-    return {}
-
-
-def parse_iso(ts):
-    return datetime.fromisoformat(ts.replace("Z", "+00:00"))
-
-
-# ------------------------- Fetch ENTSO-E XML -------------------------
-
-def fetch_api_xml(date):
-    """
-    Requests the Day-Ahead Prices (documentType A44)
-    for Belgium (BZN|BE) for the given date.
-    """
-    ensure_token()
-
-    start = date.replace(tzinfo=timezone.utc)
-    end = start + timedelta(days=1)
-
+def fetch_day_ahead_prices(target_date=None):
+    """Fetch day-ahead prices from ENTSO-E with improved data validation"""
+    token = get_entsoe_token()
+    
+    # Default to today's prices (more likely to be available and accurate)
+    if target_date is None:
+        target_date = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # ENTSO-E uses UTC timestamps
+    start_time = target_date.replace(tzinfo=timezone.utc)
+    end_time = start_time + timedelta(days=1)
+    
+    # Format for ENTSO-E API
+    start_str = start_time.strftime('%Y%m%d%H%M')
+    end_str = end_time.strftime('%Y%m%d%H%M')
+    
+    print(f"🔌 Ophalen dag-vooruit prijzen voor {target_date.strftime('%d/%m/%Y')}...")
+    print(f"🕐 UTC periode: {start_str} tot {end_str}")
+    
     params = {
-        "securityToken": ENTSOE_TOKEN,
-        "documentType": "A44",                 # Day-ahead Auction
-        "out_Domain": BE_BIDDING_ZONE,
-        "in_Domain": BE_BIDDING_ZONE,
-        "periodStart": start.strftime("%Y%m%d%H%M"),
-        "periodEnd": end.strftime("%Y%m%d%H%M"),
+        'securityToken': token,
+        'documentType': 'A44',  # Day-ahead prices
+        'in_Domain': BELGIUM_DOMAIN,
+        'out_Domain': BELGIUM_DOMAIN,
+        'periodStart': start_str,
+        'periodEnd': end_str
     }
-
-    print(f"🌍 Fetching ENTSO-E Day-Ahead prices for {date.date()}...")
-
-    r = requests.get(ENTSOE_API_URL, params=params, timeout=30)
-
-    if r.status_code != 200:
-        print(f"❌ API request failed: {r.status_code} {r.reason}")
-        print(r.text)
-        return None
-
+    
     try:
-        root = ET.fromstring(r.content)
-        return root
-    except ET.ParseError as e:
-        print("❌ XML Parse Error:", e)
+        response = requests.get(ENTSOE_API_URL, params=params, timeout=30)
+        
+        print(f"📡 HTTP Status: {response.status_code}")
+        print(f"📏 Response length: {len(response.content)} bytes")
+        
+        if response.status_code == 503:
+            print("⚠️ ENTSO-E service tijdelijk niet beschikbaar")
+            return None
+        elif response.status_code == 400:
+            print("❌ 400 Bad Request - mogelijk geen data voor deze datum")
+            return None
+        elif response.status_code != 200:
+            print(f"❌ HTTP {response.status_code}: {response.reason}")
+            return None
+        
+        # Parse XML
+        try:
+            root = ET.fromstring(response.content)
+            print(f"🔍 XML parsed - root: {root.tag}")
+        except ET.ParseError as e:
+            print(f"❌ XML Parse Error: {e}")
+            return None
+        
+        # Check for ENTSO-E error messages in XML
+        error_text = response.text.lower()
+        if 'no matching data found' in error_text:
+            print("📭 ENTSO-E: No matching data found voor deze periode")
+            return None
+        
+        # Parse the XML response
+        prices = parse_entsoe_response(root, target_date)
+        
+        if not prices:
+            print("❌ Geen prijsdata gevonden in XML")
+            return None
+        
+        # Validate the price data
+        is_valid, validation_msg = validate_price_data(prices)
+        print(f"🔍 Data validatie: {validation_msg}")
+        
+        if not is_valid:
+            print("❌ Data validatie gefaald - data wordt verworpen")
+            return None
+        
+        print(f"✅ {len(prices)} prijspunten succesvol opgehaald en gevalideerd")
+        return format_price_data(prices, target_date)
+        
+    except Exception as e:
+        print(f"❌ Onverwachte fout: {e}")
         return None
 
-
-# ------------------------- Parse Prices -------------------------
-
-def parse_prices(root, target_date):
-    print("🔎 DEBUG: Inspecting TimeSeries returned by ENTSO-E...")
-
+def parse_entsoe_response(root, target_date):
+    """Parse ENTSO-E XML response with improved handling"""
     prices = []
-    ns = detect_ns(root)
+    
+    # Try to detect namespace automatically
+    root_tag = root.tag
+    if '}' in root_tag:
+        namespace_uri = root_tag.split('}')[0][1:]
+        ns = {'ns': namespace_uri}
+        print(f"🔍 Detected namespace: {namespace_uri}")
+    else:
+        ns = {}
+        print("🔍 No namespace detected")
+    
+    # Find TimeSeries elements
+    if ns:
+        time_series_list = root.findall('.//ns:TimeSeries', ns)
+    else:
+        time_series_list = [elem for elem in root.iter() if elem.tag.endswith('TimeSeries')]
+    
+    print(f"🔍 Found {len(time_series_list)} TimeSeries elements")
+    
+    all_points = []  # Collect all points first
+    
+    for ts_idx, time_series in enumerate(time_series_list):
+        print(f"🔍 Processing TimeSeries {ts_idx + 1}")
+        
+        # Find Period elements
+        if ns:
+            periods = time_series.findall('.//ns:Period', ns)
+        else:
+            periods = [elem for elem in time_series.iter() if elem.tag.endswith('Period')]
+        
+        for period in periods:
+            # Get start time
+            start_time_elem = None
+            if ns:
+                start_time_elem = period.find('.//ns:start', ns)
+            
+            if start_time_elem is None:
+                # Try without namespace
+                for elem in period.iter():
+                    if elem.tag.endswith('start'):
+                        start_time_elem = elem
+                        break
+            
+            if start_time_elem is None:
+                continue
+            
+            start_time_text = start_time_elem.text
+            print(f"🔍 Period start: {start_time_text}")
+            
+            try:
+                start_time = datetime.fromisoformat(start_time_text.replace('Z', '+00:00'))
+            except ValueError:
+                print(f"❌ Could not parse start time: {start_time_text}")
+                continue
+            
+            # Get resolution (PT60M = hourly, PT30M = half-hourly, PT15M = quarter-hourly)
+            resolution_elem = None
+            if ns:
+                resolution_elem = period.find('.//ns:resolution', ns)
+            
+            if resolution_elem is None:
+                for elem in period.iter():
+                    if elem.tag.endswith('resolution'):
+                        resolution_elem = elem
+                        break
+            
+            resolution = resolution_elem.text if resolution_elem is not None else 'PT60M'
+            print(f"🔍 Resolution: {resolution}")
+            
+            # Calculate time delta based on resolution
+            if resolution == 'PT15M':
+                time_delta = timedelta(minutes=15)
+            elif resolution == 'PT30M':
+                time_delta = timedelta(minutes=30)
+            else:  # PT60M or default
+                time_delta = timedelta(hours=1)
+            
+            # Find Point elements
+            if ns:
+                points = period.findall('.//ns:Point', ns)
+            else:
+                points = [elem for elem in period.iter() if elem.tag.endswith('Point')]
+            
+            print(f"🔍 Found {len(points)} points in this period")
+            
+            for point in points:
+                # Get position and price
+                position_elem = price_elem = None
+                
+                for child in point:
+                    if child.tag.endswith('position'):
+                        position_elem = child
+                    elif child.tag.endswith('price.amount'):
+                        price_elem = child
+                
+                if position_elem is None or price_elem is None:
+                    continue
+                
+                try:
+                    position = int(position_elem.text)
+                    price = float(price_elem.text)
+                    
+                    # Calculate exact timestamp
+                    point_time = start_time + (time_delta * (position - 1))
+                    
+                    # Convert to Belgian local time
+                    local_time = point_time.astimezone()
+                    
+                    all_points.append({
+                        'datetime': local_time,
+                        'position': position,
+                        'price_eur_mwh': price,
+                        'price_eur_kwh': price / 1000,
+                        'start_time': start_time,
+                        'resolution': resolution
+                    })
+                    
+                except (ValueError, TypeError) as e:
+                    print(f"❌ Error parsing point: {e}")
+                    continue
+    
+    # Sort all points by datetime and remove duplicates
+    all_points.sort(key=lambda x: x['datetime'])
+    
+    # Remove duplicates (keep first occurrence)
+    seen_times = set()
+    unique_points = []
+    for point in all_points:
+        time_key = point['datetime'].strftime('%Y-%m-%d %H:%M')
+        if time_key not in seen_times:
+            seen_times.add(time_key)
+            unique_points.append(point)
+    
+    # Add sequential hour numbers for display
+    for i, point in enumerate(unique_points, 1):
+        point['hour'] = i
+    
+    print(f"🔍 Total unique points: {len(unique_points)}")
+    
+    # Additional validation: check for time gaps
+    if len(unique_points) > 1:
+        for i in range(1, len(unique_points)):
+            time_diff = unique_points[i]['datetime'] - unique_points[i-1]['datetime']
+            expected_diff = timedelta(hours=1)  # Expected for day-ahead hourly
+            
+            if abs(time_diff.total_seconds() - expected_diff.total_seconds()) > 300:  # Allow 5min tolerance
+                print(f"⚠️ Time gap detected: {time_diff} between points {i} and {i+1}")
+    
+    return unique_points
 
-    # Find raw TS elements
-    ts_list = root.findall(".//ns:TimeSeries", ns) if ns else root.findall(".//TimeSeries")
-    print(f"🔎 Found {len(ts_list)} TimeSeries")
-
-    # Log each TS
-    for i, ts in enumerate(ts_list, start=1):
-        print(f"\n--- TimeSeries {i} ---")
-
-        def get_text(elem, path):
-            e = elem.find(path, ns)
-            if e is None:
-                p = path.replace("ns:", "")
-                e = elem.find(p)
-            return e.text if e is not None else None
-
-        print("resolution:", get_text(ts, ".//ns:resolution"))
-        print("currency:", get_text(ts, ".//ns:currency_Unit.name"))
-        print("price measure unit:", get_text(ts, ".//ns:price_Measure_Unit.name"))
-
-    print("\n⚠️ Stopping after debug output.")
-    sys.exit(0)
-
-
-
-# ------------------------- Format Output -------------------------
-
-def wrap_output(prices, date):
-    values = [p["price_eur_mwh"] for p in prices]
-
-    return {
-        "metadata": {
-            "source": "ENTSO-E Day-Ahead Auction (A44)",
-            "date": date.strftime("%Y-%m-%d"),
-            "retrieved_at": datetime.now().isoformat(),
-            "timezone": "Europe/Brussels",
-            "data_points": len(prices),
-            "statistics": {
-                "average_eur_mwh": round(sum(values) / len(values), 2),
-                "min_eur_mwh": min(values),
-                "max_eur_mwh": max(values),
-                "min_hour": prices[values.index(min(values))]["hour"],
-                "max_hour": prices[values.index(max(values))]["hour"],
+def format_price_data(prices, target_date):
+    """Format price data with enhanced validation"""
+    if not prices:
+        return None
+    
+    # Calculate statistics
+    price_values = [p['price_eur_mwh'] for p in prices]
+    avg_price = sum(price_values) / len(price_values)
+    min_price = min(price_values)
+    max_price = max(price_values)
+    
+    min_hour_data = next(p for p in prices if p['price_eur_mwh'] == min_price)
+    max_hour_data = next(p for p in prices if p['price_eur_mwh'] == max_price)
+    
+    print(f"📊 Statistieken:")
+    print(f"   Gemiddeld: €{avg_price:.2f}/MWh")
+    print(f"   Minimum: €{min_price:.2f}/MWh om {min_hour_data['datetime'].strftime('%H:%M')}")
+    print(f"   Maximum: €{max_price:.2f}/MWh om {max_hour_data['datetime'].strftime('%H:%M')}")
+    print(f"   Spread: €{max_price - min_price:.2f}/MWh")
+    
+    # Create output format
+    result = {
+        'metadata': {
+            'source': 'ENTSO-E Transparency Platform',
+            'date': target_date.strftime('%Y-%m-%d'),
+            'retrieved_at': datetime.now().isoformat(),
+            'timezone': 'Europe/Brussels',
+            'data_points': len(prices),
+            'resolution': prices[0].get('resolution', 'PT60M') if prices else 'PT60M',
+            'statistics': {
+                'average_eur_mwh': round(avg_price, 2),
+                'min_eur_mwh': round(min_price, 2),
+                'max_eur_mwh': round(max_price, 2),
+                'min_hour': min_hour_data['hour'],
+                'max_hour': max_hour_data['hour'],
+                'price_spread': round(max_price - min_price, 2)
             }
         },
-        "prices": prices
+        'prices': []
     }
+    
+    # Add price data
+    for p in prices:
+        result['prices'].append({
+            'hour': p['hour'],
+            'datetime': p['datetime'].isoformat(),
+            'price_eur_mwh': round(p['price_eur_mwh'], 2),
+            'price_eur_kwh': round(p['price_eur_kwh'], 4),
+            'price_cent_kwh': round(p['price_eur_kwh'] * 100, 2)
+        })
+    
+    return result
 
-
-# ------------------------- Save Files -------------------------
-
-def save_all(data, date):
-    dstr = date.strftime("%Y%m%d")
-
-    with open(f"day_ahead_prices_{dstr}.json", "w") as f:
-        json.dump(data, f, indent=2)
-
-    pd.DataFrame(data["prices"]).to_csv(
-        f"day_ahead_prices_{dstr}.csv", index=False
-    )
-
-    with open("latest.json", "w") as f:
-        json.dump(data, f, indent=2)
-
-    print("💾 Saved JSON, CSV, latest.json")
-
-
-# ------------------------- Main -------------------------
+def save_data(data, target_date):
+    """Save data to files"""
+    if not data:
+        return False
+    
+    date_str = target_date.strftime('%Y%m%d')
+    
+    # Save JSON
+    json_filename = f'day_ahead_prices_{date_str}.json'
+    with open(json_filename, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    print(f"💾 JSON saved: {json_filename}")
+    
+    # Save CSV
+    df_data = []
+    for price in data['prices']:
+        df_data.append({
+            'datetime': price['datetime'],
+            'hour': price['hour'],
+            'price_eur_mwh': price['price_eur_mwh'],
+            'price_eur_kwh': price['price_eur_kwh'],
+            'price_cent_kwh': price['price_cent_kwh']
+        })
+    
+    if df_data:
+        df = pd.DataFrame(df_data)
+        csv_filename = f'day_ahead_prices_{date_str}.csv'
+        df.to_csv(csv_filename, index=False)
+        print(f"💾 CSV saved: {csv_filename}")
+    
+    # Save latest data
+    with open('latest.json', 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    print(f"💾 Latest data saved: latest.json")
+    
+    return True
 
 def main():
-    today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-
-    root = fetch_api_xml(today)
-    if not root:
-        print("❌ No XML returned")
-        sys.exit(1)
-
-    prices = parse_prices(root, today)
-    if not prices:
-        print("❌ Parsing failed")
-        sys.exit(1)
-
-    data = wrap_output(prices, today)
-    save_all(data, today)
-
-    print("✅ Day-ahead prices retrieved successfully!")
-
+    """Main function with enhanced error handling and multiple date attempts"""
+    print("🇧🇪 Belgian Day-Ahead Price Scraper (CORRECTED VERSION)")
+    print("=" * 60)
+    
+    # Try several dates to find valid data
+    base_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # Try: today, yesterday, day before yesterday, tomorrow
+    dates_to_try = [
+        (base_date, "today"),
+        (base_date - timedelta(days=1), "yesterday"), 
+        (base_date - timedelta(days=2), "2 days ago"),
+        (base_date + timedelta(days=1), "tomorrow")
+    ]
+    
+    for target_date, date_label in dates_to_try:
+        # Skip weekends for day-ahead markets (usually no trading)
+        if target_date.weekday() >= 5:  # Saturday = 5, Sunday = 6
+            print(f"⏭️  Skipping {date_label} ({target_date.strftime('%Y-%m-%d')}) - weekend")
+            continue
+        
+        print(f"\n🎯 Attempting {date_label}: {target_date.strftime('%Y-%m-%d %A')}")
+        
+        data = fetch_day_ahead_prices(target_date)
+        
+        if data:
+            success = save_data(data, target_date)
+            if success:
+                stats = data['metadata']['statistics']
+                print(f"\n✅ SUCCESS! Data voor {target_date.strftime('%d/%m/%Y')} opgehaald")
+                print(f"📊 {data['metadata']['data_points']} prijspunten")
+                print(f"📊 €{stats['min_eur_mwh']}-{stats['max_eur_mwh']}/MWh (spread: €{stats['price_spread']}/MWh)")
+                return  # Exit successfully
+            else:
+                print("❌ Fout bij opslaan data")
+        else:
+            print(f"❌ Geen geldige data voor {date_label}")
+    
+    print("\n❌ Geen geldige data gevonden voor alle geprobeerde datums")
+    print("💡 Mogelijke oorzaken:")
+    print("   - ENTSO-E service tijdelijk niet beschikbaar")
+    print("   - Token problemen")
+    print("   - Weekend/feestdag (geen day-ahead trading)")
+    sys.exit(1)
 
 if __name__ == "__main__":
     main()
-
