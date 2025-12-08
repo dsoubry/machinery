@@ -405,8 +405,39 @@ def convert_to_hourly(points):
     print(f"🔄 Converted {len(points)} high-res points to {len(hourly_points)} hourly averages")
     return hourly_points
 
+def find_cheapest_block(prices, block_hours=3):
+    """Find the cheapest consecutive block of hours"""
+    if len(prices) < block_hours:
+        return None
+    
+    best_sum = float('inf')
+    best_start_idx = 0
+    
+    # Try each possible consecutive block
+    for i in range(len(prices) - block_hours + 1):
+        block_sum = sum(prices[j]['price_eur_mwh'] for j in range(i, i + block_hours))
+        
+        if block_sum < best_sum:
+            best_sum = block_sum
+            best_start_idx = i
+    
+    # Get the block details
+    block_prices = prices[best_start_idx:best_start_idx + block_hours]
+    avg_price = best_sum / block_hours
+    
+    return {
+        'start_hour': block_prices[0]['hour'],
+        'end_hour': block_prices[-1]['hour'],
+        'start_time': block_prices[0]['datetime'],
+        'end_time': block_prices[-1]['datetime'],
+        'hours': block_hours,
+        'average_price': avg_price,
+        'total_price': best_sum,
+        'prices': [p['price_eur_mwh'] for p in block_prices]
+    }
+
 def format_price_data(prices, target_date):
-    """Format price data with enhanced validation"""
+    """Format price data with enhanced validation and cheapest blocks"""
     if not prices:
         return None
     
@@ -419,11 +450,22 @@ def format_price_data(prices, target_date):
     min_hour_data = next(p for p in prices if p['price_eur_mwh'] == min_price)
     max_hour_data = next(p for p in prices if p['price_eur_mwh'] == max_price)
     
+    # Find cheapest consecutive blocks
+    cheapest_1h = find_cheapest_block(prices, 1)
+    cheapest_2h = find_cheapest_block(prices, 2) 
+    cheapest_3h = find_cheapest_block(prices, 3)
+    cheapest_4h = find_cheapest_block(prices, 4)
+    
     print(f"📊 Statistieken:")
     print(f"   Gemiddeld: €{avg_price:.2f}/MWh")
     print(f"   Minimum: €{min_price:.2f}/MWh om {min_hour_data['datetime'].strftime('%H:%M')}")
     print(f"   Maximum: €{max_price:.2f}/MWh om {max_hour_data['datetime'].strftime('%H:%M')}")
     print(f"   Spread: €{max_price - min_price:.2f}/MWh")
+    
+    if cheapest_3h:
+        start_time = datetime.fromisoformat(cheapest_3h['start_time']).strftime('%H:%M')
+        end_time = datetime.fromisoformat(cheapest_3h['end_time']).strftime('%H:%M') 
+        print(f"💡 Goedkoopste 3-uur blok: {start_time}-{end_time} (avg: €{cheapest_3h['average_price']:.2f}/MWh)")
     
     # Create output format
     result = {
@@ -441,6 +483,37 @@ def format_price_data(prices, target_date):
                 'min_hour': min_hour_data['hour'],
                 'max_hour': max_hour_data['hour'],
                 'price_spread': round(max_price - min_price, 2)
+            },
+            'cheapest_blocks': {
+                '1_hour': {
+                    'hour': cheapest_1h['start_hour'],
+                    'time': cheapest_1h['start_time'],
+                    'price': round(cheapest_1h['average_price'], 2)
+                } if cheapest_1h else None,
+                '2_hours': {
+                    'start_hour': cheapest_2h['start_hour'],
+                    'end_hour': cheapest_2h['end_hour'],
+                    'start_time': cheapest_2h['start_time'],
+                    'end_time': cheapest_2h['end_time'],
+                    'average_price': round(cheapest_2h['average_price'], 2),
+                    'hours': 2
+                } if cheapest_2h else None,
+                '3_hours': {
+                    'start_hour': cheapest_3h['start_hour'],
+                    'end_hour': cheapest_3h['end_hour'],
+                    'start_time': cheapest_3h['start_time'],
+                    'end_time': cheapest_3h['end_time'],
+                    'average_price': round(cheapest_3h['average_price'], 2),
+                    'hours': 3
+                } if cheapest_3h else None,
+                '4_hours': {
+                    'start_hour': cheapest_4h['start_hour'],
+                    'end_hour': cheapest_4h['end_hour'],
+                    'start_time': cheapest_4h['start_time'],
+                    'end_time': cheapest_4h['end_time'],
+                    'average_price': round(cheapest_4h['average_price'], 2),
+                    'hours': 4
+                } if cheapest_4h else None
             }
         },
         'prices': []
