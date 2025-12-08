@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Generate clean HTML report for Belgian day-ahead electricity prices
-Simple layout that respects the original design
+Generate HTML report matching the original dark theme design
+Maintains the beautiful dark aesthetic with modern styling
 """
 
 import json
@@ -21,60 +21,52 @@ def load_latest_data():
         return None
 
 def format_price_table(prices):
-    """Generate simple HTML table with price data"""
+    """Generate table with price data matching original styling"""
     if not prices:
-        return "<p>Geen prijsdata beschikbaar</p>"
+        return '<tbody><tr><td colspan="4">Geen prijsdata beschikbaar</td></tr></tbody>'
     
-    # Find min/max for highlighting
+    # Find min/max for relative bars
     price_values = [p['price_eur_mwh'] for p in prices]
     min_price = min(price_values)
     max_price = max(price_values)
     
-    html = """
-    <table>
-        <thead>
-            <tr>
-                <th>Uur</th>
-                <th>Tijdstip</th>
-                <th>Prijs (€/MWh)</th>
-                <th>Prijs (€/kWh)</th>
-                <th>Prijs (cent/kWh)</th>
-            </tr>
-        </thead>
-        <tbody>
-    """
+    html = '<tbody>'
     
     for price in prices:
-        # Simple styling
-        row_class = ""
-        if price['price_eur_mwh'] == min_price:
-            row_class = ' class="lowest"'
-        elif price['price_eur_mwh'] == max_price:
-            row_class = ' class="highest"'
-        
         # Parse datetime for display
         dt = datetime.fromisoformat(price['datetime'].replace('Z', '+00:00'))
-        time_str = dt.strftime('%H:%M')
+        time_str = dt.strftime('%H.%Mu')
+        next_hour = (dt + timedelta(hours=1)).strftime('%H.%Mu')
+        time_range = f"{time_str} – {next_hour}"
         
-        html += f"""
+        # Highlight lowest prices
+        row_class = ""
+        star = ""
+        if price['price_eur_mwh'] == min_price:
+            row_class = ' class="best-block"'
+            star = "★"
+        
+        # Calculate relative bar width
+        ratio = (price['price_eur_mwh'] / max_price) * 100 if max_price > 0 else 0
+        
+        html += f'''
             <tr{row_class}>
-                <td>{price['hour']:02d}</td>
-                <td>{time_str}</td>
-                <td>€{price['price_eur_mwh']:.2f}</td>
-                <td>€{price['price_eur_kwh']:.4f}</td>
-                <td>{price['price_cent_kwh']:.2f}</td>
+                <td>{time_range}</td>
+                <td>{price['price_eur_mwh']:.2f} €</td>
+                <td>{price['price_cent_kwh']:.2f} ct/kWh</td>
+                <td class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: {ratio:.1f}%"></div>
+                    </div>
+                </td>
             </tr>
-        """
+        '''
     
-    html += """
-        </tbody>
-    </table>
-    """
-    
+    html += '</tbody>'
     return html
 
 def generate_html_report(data):
-    """Generate clean, minimal HTML report"""
+    """Generate HTML report matching original dark theme"""
     if not data:
         return generate_error_page()
     
@@ -84,7 +76,17 @@ def generate_html_report(data):
     # Parse date for display
     try:
         date_obj = datetime.fromisoformat(metadata.get('date', ''))
-        date_display = date_obj.strftime('%d/%m/%Y')
+        date_display = date_obj.strftime('%A %d %B %Y')
+        # Dutch day names
+        date_dutch = {
+            'Monday': 'maandag', 'Tuesday': 'dinsdag', 'Wednesday': 'woensdag',
+            'Thursday': 'donderdag', 'Friday': 'vrijdag', 'Saturday': 'zaterdag', 'Sunday': 'zondag',
+            'January': 'januari', 'February': 'februari', 'March': 'maart', 'April': 'april',
+            'May': 'mei', 'June': 'juni', 'July': 'juli', 'August': 'augustus',
+            'September': 'september', 'October': 'oktober', 'November': 'november', 'December': 'december'
+        }
+        for en, nl in date_dutch.items():
+            date_display = date_display.replace(en, nl)
     except:
         date_display = metadata.get('date', 'Onbekend')
     
@@ -104,301 +106,356 @@ def generate_html_report(data):
     except:
         retrieved_display = 'Onbekend'
     
-    # Price data for chart
-    chart_data = {
-        'labels': [f"{p['hour']:02d}:00" for p in prices],
-        'prices': [p['price_eur_mwh'] for p in prices]
-    }
-    
-    html = f"""<!DOCTYPE html>
+    html = f'''<!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Belgian Electricity Prices - {date_display}</title>
-    
-    <style>
-        body {{
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background: #f9f9f9;
-            color: #333;
-        }}
-        
-        .container {{
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }}
-        
-        h1 {{
-            color: #2c3e50;
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 28px;
-        }}
-        
-        .subtitle {{
-            text-align: center;
-            color: #7f8c8d;
-            margin-bottom: 30px;
-            font-size: 16px;
-        }}
-        
-        .stats {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }}
-        
-        .stat-box {{
-            background: #ecf0f1;
-            padding: 20px;
-            border-radius: 6px;
-            text-align: center;
-        }}
-        
-        .stat-value {{
-            font-size: 24px;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 5px;
-        }}
-        
-        .stat-label {{
-            color: #7f8c8d;
-            font-size: 14px;
-        }}
-        
-        .chart-container {{
-            margin: 30px 0;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 20px;
-        }}
-        
-        table {{
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }}
-        
-        th, td {{
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }}
-        
-        th {{
-            background: #34495e;
-            color: white;
-            font-weight: bold;
-        }}
-        
-        tr:hover {{
-            background: #f5f5f5;
-        }}
-        
-        .lowest {{
-            background: #d5f4e6 !important;
-            font-weight: bold;
-        }}
-        
-        .highest {{
-            background: #fadbd8 !important;
-            font-weight: bold;
-        }}
-        
-        .footer {{
-            margin-top: 30px;
-            padding: 20px;
-            background: #ecf0f1;
-            border-radius: 6px;
-            text-align: center;
-            color: #7f8c8d;
-            font-size: 14px;
-        }}
-        
-        .tips {{
-            margin: 20px 0;
-            padding: 20px;
-            background: #e8f5e8;
-            border-left: 4px solid #27ae60;
-            border-radius: 0 6px 6px 0;
-        }}
-        
-        .tips h3 {{
-            margin-top: 0;
-            color: #27ae60;
-        }}
-        
-        .tips ul {{
-            margin-bottom: 0;
-        }}
-        
-        canvas {{
-            max-width: 100%;
-            height: 300px;
-        }}
-        
-        @media (max-width: 768px) {{
-            body {{
-                margin: 10px;
-            }}
-            .container {{
-                padding: 20px;
-            }}
-            .stats {{
-                grid-template-columns: 1fr;
-            }}
-            table {{
-                font-size: 14px;
-            }}
-        }}
-    </style>
+  <meta charset="UTF-8">
+  <title>Belgian Day-Ahead Electricity Prices</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {{
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color-scheme: light dark;
+    }}
+
+    body {{
+      margin: 0;
+      padding: 1.5rem;
+      background: #0f172a;
+      color: #e5e7eb;
+    }}
+
+    h1 {{
+      margin-top: 0;
+      font-size: 1.6rem;
+    }}
+
+    .card {{
+      max-width: 1000px;
+      margin: 0 auto;
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+    }}
+
+    .results {{
+      margin-top: 1.5rem;
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+      gap: 1.5rem;
+    }}
+
+    @media (max-width: 800px) {{
+      .results {{
+        grid-template-columns: 1fr;
+      }}
+    }}
+
+    .summary {{
+      border-radius: 1rem;
+      padding: 1rem;
+      background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.3), rgba(15, 23, 42, 0.9));
+      border: 1px solid rgba(34, 197, 94, 0.5);
+      min-height: 110px;
+    }}
+
+    .summary h2 {{
+      margin-top: 0;
+      font-size: 1.1rem;
+    }}
+
+    .summary p {{
+      margin: 0.15rem 0;
+      font-size: 0.9rem;
+    }}
+
+    .summary strong {{
+      color: #bbf7d0;
+    }}
+
+    table {{
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      overflow: hidden;
+      border-radius: 1rem;
+    }}
+
+    thead {{
+      background: #020617;
+    }}
+
+    th, td {{
+      padding: 0.4rem 0.5rem;
+      text-align: right;
+      border-bottom: 1px solid #1f2937;
+      white-space: nowrap;
+    }}
+
+    th:first-child, td:first-child {{
+      text-align: left;
+    }}
+
+    tbody tr:nth-child(even) {{
+      background: rgba(15, 23, 42, 0.7);
+    }}
+
+    .best-block {{
+      background: rgba(34, 197, 94, 0.12) !important;
+      position: relative;
+    }}
+
+    .best-block::before {{
+      content: "★";
+      position: absolute;
+      left: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.7rem;
+      color: #22c55e;
+    }}
+
+    .bar-cell {{
+      width: 35%;
+    }}
+
+    .bar-wrapper {{
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(31, 41, 55, 0.9);
+      overflow: hidden;
+    }}
+
+    .bar {{
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #22c55e, #fbbf24, #f97316, #ef4444);
+      width: 0%;
+      transition: width 0.3s ease;
+    }}
+
+    .note {{
+      margin-top: 0.75rem;
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }}
+
+    .small {{
+      font-size: 0.75rem;
+    }}
+
+    .status-box {{
+      margin-top: 0.75rem;
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }}
+
+    .chart-container {{
+      margin-top: 1rem;
+      border-radius: 1rem;
+      padding: 1rem;
+      background: rgba(2, 6, 23, 0.5);
+      border: 1px solid rgba(75, 85, 99, 0.5);
+    }}
+
+    .chart-container h3 {{
+      margin-top: 0;
+      font-size: 1rem;
+      color: #e5e7eb;
+    }}
+
+    canvas {{
+      max-width: 100%;
+      height: 200px;
+    }}
+
+    .tips {{
+      margin-top: 1rem;
+      padding: 1rem;
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      border-radius: 1rem;
+    }}
+
+    .tips h3 {{
+      margin-top: 0;
+      font-size: 1rem;
+      color: #bbf7d0;
+    }}
+
+    .tips p {{
+      margin: 0.25rem 0;
+      font-size: 0.85rem;
+      color: #d1fae5;
+    }}
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🇧🇪 Belgian Electricity Prices</h1>
-        <p class="subtitle">Day-ahead prices for {date_display} • Data from {metadata.get('source', 'ENTSO-E')}</p>
-        
-        <div class="stats">
-            <div class="stat-box">
-                <div class="stat-value">€{avg_price:.2f}</div>
-                <div class="stat-label">Average (€/MWh)</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-value">€{min_price:.2f}</div>
-                <div class="stat-label">Lowest ({min_hour:02d}:00)</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-value">€{max_price:.2f}</div>
-                <div class="stat-label">Highest ({max_hour:02d}:00)</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-value">{metadata.get('data_points', 0)}</div>
-                <div class="stat-label">Data points</div>
-            </div>
-        </div>
-        
-        <div class="chart-container">
-            <h3>Hourly Price Chart</h3>
-            <canvas id="priceChart"></canvas>
-        </div>
-        
-        <div class="tips">
-            <h3>💡 Energy Saving Tips</h3>
-            <ul>
-                <li><strong>Use appliances during low-price hours</strong> (green rows in table below)</li>
-                <li><strong>Avoid high consumption during peak hours</strong> (red rows in table below)</li>
-                <li><strong>Schedule heating and water boiler</strong> for cheapest moments</li>
-                <li><strong>Charge electric vehicles</strong> during lowest prices</li>
-            </ul>
-        </div>
-        
-        <h3>Detailed Price Table</h3>
-        {format_price_table(prices)}
-        
-        <div class="footer">
-            <p>Data updated: {retrieved_display} • Source: {metadata.get('source', 'ENTSO-E Transparency Platform')}</p>
-            <p><a href="https://github.com/dsoubry/machinery" style="color: #3498db;">GitHub Repository</a> | 
-               <a href="https://transparency.entsoe.eu/" style="color: #3498db;">ENTSO-E Platform</a></p>
-        </div>
+  <div class="card">
+    <h1>Belgian Day-Ahead Electricity Prices</h1>
+    <p class="small">
+      Officiële dag-vooruit elektriciteitsprijzen van de Belgische elektriciteitsmarkt.
+      Data van ENTSO-E Transparency Platform via geautomatiseerde GitHub Actions.
+    </p>
+
+    <div class="status-box">
+      Laatste update: {retrieved_display} • Data voor: {date_display}
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        // Simple chart
-        const ctx = document.getElementById('priceChart').getContext('2d');
-        
-        new Chart(ctx, {{
-            type: 'line',
-            data: {{
-                labels: {json.dumps(chart_data['labels'])},
-                datasets: [{{
-                    label: 'Price (€/MWh)',
-                    data: {json.dumps(chart_data['prices'])},
-                    borderColor: '#3498db',
-                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.1
-                }}]
-            }},
-            options: {{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {{
-                    legend: {{
-                        display: false
-                    }}
-                }},
-                scales: {{
-                    y: {{
-                        title: {{
-                            display: true,
-                            text: 'Price (€/MWh)'
-                        }},
-                        beginAtZero: false
-                    }},
-                    x: {{
-                        title: {{
-                            display: true,
-                            text: 'Hour'
-                        }}
-                    }}
-                }}
+    <div class="results">
+      <div>
+        <div class="summary">
+          <h2>Prijsoverzicht</h2>
+          <p><strong>Gemiddelde prijs:</strong> €{avg_price:.2f}/MWh</p>
+          <p><strong>Laagste prijs:</strong> €{min_price:.2f}/MWh (uur {min_hour:02d})</p>
+          <p><strong>Hoogste prijs:</strong> €{max_price:.2f}/MWh (uur {max_hour:02d})</p>
+          <p><strong>Datapunten:</strong> {metadata.get('data_points', 0)} uurprijzen</p>
+        </div>
+
+        <div class="tips">
+          <h3>💡 Energiebespaartips</h3>
+          <p><strong>Gebruik apparaten tijdens groene uren</strong> (★ in tabel)</p>
+          <p><strong>Vermijd hoog verbruik tijdens piekuren</strong></p>
+          <p><strong>Plan wasmachine/vaatwas</strong> voor goedkoopste momenten</p>
+          <p><strong>Laad elektrische auto op</strong> tijdens laagste prijzen</p>
+        </div>
+
+        <div class="chart-container">
+          <h3>Prijsverloop</h3>
+          <canvas id="priceChart"></canvas>
+        </div>
+      </div>
+
+      <div>
+        <table>
+          <thead>
+            <tr>
+              <th>Uurblok</th>
+              <th>Prijs (€/MWh)</th>
+              <th>Prijs (ct/kWh)</th>
+              <th class="bar-cell">Relatief niveau</th>
+            </tr>
+          </thead>
+          {format_price_table(prices)}
+        </table>
+        <div class="note">
+          Balkjes tonen de relatieve prijs t.o.v. de duurste uurprijs van de dag.
+          ★ = Laagste prijs van de dag.
+        </div>
+      </div>
+    </div>
+
+    <div class="note" style="text-align: center; margin-top: 2rem; border-top: 1px solid #1f2937; padding-top: 1rem;">
+      Data: {metadata.get('source', 'ENTSO-E Transparency Platform')} • 
+      <a href="https://github.com/dsoubry/machinery" style="color: #22c55e;">GitHub</a> • 
+      <a href="https://transparency.entsoe.eu/" style="color: #22c55e;">ENTSO-E</a>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Chart with dark theme
+    const ctx = document.getElementById('priceChart').getContext('2d');
+    const chartData = {{
+      labels: {json.dumps([f"{p['hour']:02d}:00" for p in prices])},
+      datasets: [{{
+        label: 'Prijs (€/MWh)',
+        data: {json.dumps([p['price_eur_mwh'] for p in prices])},
+        borderColor: '#22c55e',
+        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.1,
+        pointBackgroundColor: '#22c55e',
+        pointBorderColor: '#22c55e',
+        pointRadius: 3
+      }}]
+    }};
+    
+    new Chart(ctx, {{
+      type: 'line',
+      data: chartData,
+      options: {{
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {{
+          legend: {{ display: false }}
+        }},
+        scales: {{
+          x: {{
+            ticks: {{ color: '#9ca3af' }},
+            grid: {{ color: 'rgba(156, 163, 175, 0.1)' }}
+          }},
+          y: {{
+            ticks: {{ color: '#9ca3af' }},
+            grid: {{ color: 'rgba(156, 163, 175, 0.1)' }},
+            title: {{
+              display: true,
+              text: '€/MWh',
+              color: '#9ca3af'
             }}
-        }});
-    </script>
+          }}
+        }}
+      }}
+    }});
+  </script>
 </body>
-</html>"""
+</html>'''
     
     return html
 
 def generate_error_page():
-    """Generate simple error page"""
-    return """<!DOCTYPE html>
+    """Generate error page matching the dark theme"""
+    return '''<!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Belgian Electricity Prices - No Data</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 50px;
-            text-align: center;
-            background: #f9f9f9;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Belgian Electricity Prices - No Data</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color-scheme: light dark;
+    }
+    body {
+      margin: 0;
+      padding: 1.5rem;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+    .card {
+      max-width: 600px;
+      margin: 0 auto;
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 1rem;
+      padding: 2rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      text-align: center;
+    }
+    h1 {
+      margin-top: 0;
+      color: #ef4444;
+    }
+    a {
+      color: #22c55e;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>⚠️ No Price Data Available</h1>
-        <p>Day-ahead electricity prices are currently not available.</p>
-        <p>Please try again later or check the GitHub Actions for more information.</p>
-        <p><a href="https://github.com/dsoubry/machinery/actions">View GitHub Actions</a></p>
-    </div>
+  <div class="card">
+    <h1>⚠️ Geen prijsdata beschikbaar</h1>
+    <p>De dag-vooruit elektriciteitsprijzen zijn momenteel niet beschikbaar.</p>
+    <p>Probeer het later opnieuw of controleer de <a href="https://github.com/dsoubry/machinery/actions">GitHub Actions</a> voor meer informatie.</p>
+  </div>
 </body>
-</html>"""
+</html>'''
 
 def main():
-    """Generate clean HTML report"""
-    print("🌐 Generating clean HTML report...")
+    """Generate HTML report matching original design"""
+    print("🌐 Generating HTML report with original dark theme...")
     
     data = load_latest_data()
     html_content = generate_html_report(data)
@@ -406,7 +463,7 @@ def main():
     with open('index.html', 'w', encoding='utf-8') as f:
         f.write(html_content)
     
-    print("✅ Clean index.html generated")
+    print("✅ Dark theme index.html generated")
 
 if __name__ == "__main__":
     main()
