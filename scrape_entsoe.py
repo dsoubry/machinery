@@ -425,11 +425,21 @@ def find_cheapest_block(prices, block_hours=3):
     block_prices = prices[best_start_idx:best_start_idx + block_hours]
     avg_price = best_sum / block_hours
     
+    # Handle datetime - they might be datetime objects or ISO strings
+    start_datetime = block_prices[0]['datetime']
+    end_datetime = block_prices[-1]['datetime']
+    
+    # Convert to ISO strings if they're datetime objects
+    if hasattr(start_datetime, 'isoformat'):
+        start_datetime = start_datetime.isoformat()
+    if hasattr(end_datetime, 'isoformat'):
+        end_datetime = end_datetime.isoformat()
+    
     return {
         'start_hour': block_prices[0]['hour'],
         'end_hour': block_prices[-1]['hour'],
-        'start_time': block_prices[0]['datetime'],
-        'end_time': block_prices[-1]['datetime'],
+        'start_time': start_datetime,
+        'end_time': end_datetime,
         'hours': block_hours,
         'average_price': avg_price,
         'total_price': best_sum,
@@ -463,8 +473,19 @@ def format_price_data(prices, target_date):
     print(f"   Spread: €{max_price - min_price:.2f}/MWh")
     
     if cheapest_3h:
-        start_time = datetime.fromisoformat(cheapest_3h['start_time']).strftime('%H:%M')
-        end_time = datetime.fromisoformat(cheapest_3h['end_time']).strftime('%H:%M') 
+        # Handle both datetime objects and ISO strings
+        start_time_obj = cheapest_3h['start_time']
+        end_time_obj = cheapest_3h['end_time']
+        
+        if hasattr(start_time_obj, 'strftime'):
+            # It's already a datetime object
+            start_time = start_time_obj.strftime('%H:%M')
+            end_time = end_time_obj.strftime('%H:%M')
+        else:
+            # It's an ISO string
+            start_time = datetime.fromisoformat(start_time_obj.replace('Z', '+00:00')).strftime('%H:%M')
+            end_time = datetime.fromisoformat(end_time_obj.replace('Z', '+00:00')).strftime('%H:%M')
+        
         print(f"💡 Goedkoopste 3-uur blok: {start_time}-{end_time} (avg: €{cheapest_3h['average_price']:.2f}/MWh)")
     
     # Create output format
