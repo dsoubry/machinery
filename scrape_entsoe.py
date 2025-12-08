@@ -154,7 +154,7 @@ def fetch_day_ahead_prices(target_date=None):
         return None
 
 def parse_entsoe_response(root, target_date):
-    """Parse ENTSO-E XML response with improved handling"""
+    """Parse ENTSO-E XML response with improved handling and duplicate prevention"""
     prices = []
     
     # Try to detect namespace automatically
@@ -175,7 +175,11 @@ def parse_entsoe_response(root, target_date):
     
     print(f"🔍 Found {len(time_series_list)} TimeSeries elements")
     
-    all_points = []  # Collect all points first
+    # Convert target date to compare with periods
+    target_date_start = target_date.replace(tzinfo=timezone.utc)
+    target_date_end = target_date_start + timedelta(days=1)
+    
+    collected_points = {}  # Use dict to automatically handle duplicates by timestamp
     
     for ts_idx, time_series in enumerate(time_series_list):
         print(f"🔍 Processing TimeSeries {ts_idx + 1}")
@@ -186,7 +190,9 @@ def parse_entsoe_response(root, target_date):
         else:
             periods = [elem for elem in time_series.iter() if elem.tag.endswith('Period')]
         
-        for period in periods:
+        print(f"🔍 Found {len(periods)} periods in TimeSeries {ts_idx + 1}")
+        
+        for period_idx, period in enumerate(periods):
             # Get start time
             start_time_elem = None
             if ns:
@@ -200,18 +206,27 @@ def parse_entsoe_response(root, target_date):
                         break
             
             if start_time_elem is None:
+                print(f"⚠️ No start time found in period {period_idx + 1}")
                 continue
             
             start_time_text = start_time_elem.text
-            print(f"🔍 Period start: {start_time_text}")
             
             try:
-                start_time = datetime.fromisoformat(start_time_text.replace('Z', '+00:00'))
+                period_start = datetime.fromisoformat(start_time_text.replace('Z', '+00:00'))
             except ValueError:
                 print(f"❌ Could not parse start time: {start_time_text}")
                 continue
             
-            # Get resolution (PT60M = hourly, PT30M = half-hourly, PT15M = quarter-hourly)
+            # Check if this period is for our target date
+            if not (target_date_start <= period_start < target_date_end):
+                print(f"⏭️ Skipping period {period_idx + 1} - outside target date range")
+                print(f"   Period start: {period_start}")
+                print(f"   Target range: {target_date_start} to {target_date_end}")
+                continue
+            
+            print(f"✅ Processing period {period_idx + 1} - start: {period_start}")
+            
+            # Get resolution
             resolution_elem = None
             if ns:
                 resolution_elem = period.find('.//ns:resolution', ns)
@@ -259,52 +274,73 @@ def parse_entsoe_response(root, target_date):
                     price = float(price_elem.text)
                     
                     # Calculate exact timestamp
-                    point_time = start_time + (time_delta * (position - 1))
+                    point_time = period_start + (time_delta * (position - 1))
+                    
+                    # Double-check this point is within our target date
+                    if not (target_date_start <= point_time < target_date_end):
+                        print(f"⏭️ Skipping point at {point_time} - outside target date")
+                        continue
                     
                     # Convert to Belgian local time
                     local_time = point_time.astimezone()
                     
-                    all_points.append({
+                    # Use timestamp as key to prevent duplicates
+                    timestamp_key = local_time.strftime('%Y-%m-%d %H:%M:%S')
+                    
+                    if timestamp_key in collected_points:
+                        print(f"⚠️ Duplicate timestamp detected: {timestamp_key} - keeping first occurrence")
+                        continue
+                    
+                    collected_points[timestamp_key] = {
                         'datetime': local_time,
                         'position': position,
                         'price_eur_mwh': price,
                         'price_eur_kwh': price / 1000,
-                        'start_time': start_time,
+                        'period_start': period_start,
                         'resolution': resolution
-                    })
+                    }
                     
                 except (ValueError, TypeError) as e:
                     print(f"❌ Error parsing point: {e}")
                     continue
     
-    # Sort all points by datetime and remove duplicates
+    # Convert dict to sorted list
+    all_points = list(collected_points.values())
     all_points.sort(key=lambda x: x['datetime'])
     
-    # Remove duplicates (keep first occurrence)
-    seen_times = set()
-    unique_points = []
-    for point in all_points:
-        time_key = point['datetime'].strftime('%Y-%m-%d %H:%M')
-        if time_key not in seen_times:
-            seen_times.add(time_key)
-            unique_points.append(point)
-    
     # Add sequential hour numbers for display
-    for i, point in enumerate(unique_points, 1):
+    for i, point in enumerate(all_points, 1):
         point['hour'] = i
     
-    print(f"🔍 Total unique points: {len(unique_points)}")
+    print(f"🔍 Final unique points after deduplication: {len(all_points)}")
     
-    # Additional validation: check for time gaps
-    if len(unique_points) > 1:
-        for i in range(1, len(unique_points)):
-            time_diff = unique_points[i]['datetime'] - unique_points[i-1]['datetime']
-            expected_diff = timedelta(hours=1)  # Expected for day-ahead hourly
+    # Final validation: ensure we have exactly one day's worth of data
+    if len(all_points) > 0:
+        first_time = all_points[0]['datetime']
+        last_time = all_points[-1]['datetime']
+        time_span = last_time - first_time
+        print(f"🔍 Data time span: {first_time.strftime('%H:%M')} to {last_time.strftime('%H:%M')} ({time_span})")
+        
+        # Check if we have more than 24 hours of data
+        if time_span > timedelta(hours=25):  # Allow some tolerance
+            print(f"⚠️ Warning: Data spans more than 24 hours ({time_span})")
             
-            if abs(time_diff.total_seconds() - expected_diff.total_seconds()) > 300:  # Allow 5min tolerance
-                print(f"⚠️ Time gap detected: {time_diff} between points {i} and {i+1}")
+            # Filter to keep only data for the target date
+            target_date_local = target_date_start.astimezone()
+            filtered_points = []
+            
+            for point in all_points:
+                if point['datetime'].date() == target_date_local.date():
+                    filtered_points.append(point)
+            
+            print(f"🔍 After date filtering: {len(filtered_points)} points")
+            all_points = filtered_points
+            
+            # Re-assign hour numbers
+            for i, point in enumerate(all_points, 1):
+                point['hour'] = i
     
-    return unique_points
+    return all_points
 
 def format_price_data(prices, target_date):
     """Format price data with enhanced validation"""
