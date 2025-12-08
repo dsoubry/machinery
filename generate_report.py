@@ -21,32 +21,44 @@ def load_latest_data():
         return None
 
 def format_price_table(prices):
-    """Generate table with price data matching original styling"""
+    """Generate table with correct hour-block handling (fixes duplicated '23:00 – 00:00')"""
     if not prices:
         return '<tbody><tr><td colspan="4">Geen prijsdata beschikbaar</td></tr></tbody>'
     
+    from datetime import timezone
+
     # Find min/max for relative bars
     price_values = [p['price_eur_mwh'] for p in prices]
     min_price = min(price_values)
     max_price = max(price_values)
-    
+
+    def format_hour_block(ts_utc):
+        """
+        Converts UTC timestamp to CET/CEST local time safely.
+        Prevents repeating hour labels like multiple '23:00 – 00:00'.
+        """
+        ts_local = ts_utc.astimezone(timezone(timedelta(hours=1)))  # CET (UTC+1)
+
+        start_hour = ts_local.hour
+        end_hour = (start_hour + 1) % 24
+
+        return f"{start_hour:02d}.00u – {end_hour:02d}.00u"
+
     html = '<tbody>'
-    
+
     for price in prices:
-        # Parse datetime for display
-        dt = datetime.fromisoformat(price['datetime'].replace('Z', '+00:00'))
-        time_str = dt.strftime('%H.%Mu')
-        next_hour = (dt + timedelta(hours=1)).strftime('%H.%Mu')
-        time_range = f"{time_str} – {next_hour}"
-        
+        # Parse correct UTC timestamp
+        dt_utc = datetime.fromisoformat(price['datetime'].replace('Z', '+00:00'))
+
+        # Correct hour label
+        time_range = format_hour_block(dt_utc)
+
         # Highlight lowest prices
-        row_class = ""
-        if price['price_eur_mwh'] == min_price:
-            row_class = ' class="best-block"'
-        
-        # Calculate relative bar width
+        row_class = ' class="best-block"' if price['price_eur_mwh'] == min_price else ""
+
+        # Relative bar width
         ratio = (price['price_eur_mwh'] / max_price) * 100 if max_price > 0 else 0
-        
+
         html += f'''
             <tr{row_class}>
                 <td data-label="Uurblok">{time_range}</td>
@@ -59,7 +71,7 @@ def format_price_table(prices):
                 </td>
             </tr>
         '''
-    
+
     html += '</tbody>'
     return html
 
