@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
 """
-Generate HTML report matching the original dark theme design
-Maintains the beautiful dark aesthetic with modern styling
+Generate HTML report for Belgian day-ahead prices
+- Gebruikt UTC timestamps uit latest.json
+- Converteert voor de weergave naar Europe/Brussels
 """
 
 import json
-import os
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+
+LOCAL_TZ = ZoneInfo("Europe/Brussels")
+
 
 def load_latest_data():
     """Load the latest price data"""
     try:
-        with open('latest.json', 'r', encoding='utf-8') as f:
+        with open("latest.json", "r", encoding="utf-8") as f:
             return json.load(f)
     except FileNotFoundError:
         print("❌ Geen latest.json gevonden")
@@ -20,46 +24,42 @@ def load_latest_data():
         print("❌ Ongeldige JSON in latest.json")
         return None
 
+
 def format_price_table(prices):
-    """Generate table with correct hour-block handling (fixes duplicated '23:00 – 00:00')"""
+    """
+    Tabel-rijen genereren.
+
+    price["datetime"] = ISO string in UTC.
+    Voor labels tonen we de lokale tijd (Europe/Brussels).
+    """
     if not prices:
         return '<tbody><tr><td colspan="4">Geen prijsdata beschikbaar</td></tr></tbody>'
-    
-    from datetime import timezone
 
-    # Find min/max for relative bars
-    price_values = [p['price_eur_mwh'] for p in prices]
+    # Min/max voor balkjes
+    price_values = [p["price_eur_mwh"] for p in prices]
     min_price = min(price_values)
     max_price = max(price_values)
 
-    def format_hour_block(ts_utc):
-        """
-        Converts UTC timestamp to CET/CEST local time safely.
-        Prevents repeating hour labels like multiple '23:00 – 00:00'.
-        """
-        ts_local = ts_utc.astimezone(timezone(timedelta(hours=1)))  # CET (UTC+1)
-
-        start_hour = ts_local.hour
-        end_hour = (start_hour + 1) % 24
-
-        return f"{start_hour:02d}.00u – {end_hour:02d}.00u"
-
-    html = '<tbody>'
+    html = "<tbody>"
 
     for price in prices:
-        # Parse correct UTC timestamp
-        dt_utc = datetime.fromisoformat(price['datetime'].replace('Z', '+00:00'))
+        # UTC → lokale tijd
+        dt_utc = datetime.fromisoformat(price["datetime"].replace("Z", "+00:00"))
+        dt_local = dt_utc.astimezone(LOCAL_TZ)
 
-        # Correct hour label
-        time_range = format_hour_block(dt_utc)
+        start_str = dt_local.strftime("%H.%Mu")
+        end_local = dt_local + timedelta(hours=1)
+        end_str = end_local.strftime("%H.%Mu")
+        time_range = f"{start_str} – {end_str}"
 
-        # Highlight lowest prices
-        row_class = ' class="best-block"' if price['price_eur_mwh'] == min_price else ""
+        # Laagste prijs highlighten
+        row_class = ""
+        if price["price_eur_mwh"] == min_price:
+            row_class = ' class="best-block"'
 
-        # Relative bar width
-        ratio = (price['price_eur_mwh'] / max_price) * 100 if max_price > 0 else 0
+        ratio = (price["price_eur_mwh"] / max_price) * 100 if max_price > 0 else 0
 
-        html += f'''
+        html += f"""
             <tr{row_class}>
                 <td data-label="Uurblok">{time_range}</td>
                 <td data-label="Prijs (€/MWh)">{price['price_eur_mwh']:.2f} €</td>
@@ -70,53 +70,69 @@ def format_price_table(prices):
                     </div>
                 </td>
             </tr>
-        '''
+        """
 
-    html += '</tbody>'
+    html += "</tbody>"
     return html
 
+
 def generate_html_report(data):
-    """Generate HTML report matching original dark theme"""
+    """Generate full HTML page"""
     if not data:
         return generate_error_page()
-    
-    metadata = data.get('metadata', {})
-    prices = data.get('prices', [])
-    
-    # Parse date for display
+
+    metadata = data.get("metadata", {})
+    prices = data.get("prices", [])
+
+    # Datum tonen
     try:
-        date_obj = datetime.fromisoformat(metadata.get('date', ''))
-        date_display = date_obj.strftime('%A %d %B %Y')
-        # Dutch day names
+        date_obj = datetime.fromisoformat(metadata.get("date", ""))
+        date_display = date_obj.strftime("%A %d %B %Y")
         date_dutch = {
-            'Monday': 'maandag', 'Tuesday': 'dinsdag', 'Wednesday': 'woensdag',
-            'Thursday': 'donderdag', 'Friday': 'vrijdag', 'Saturday': 'zaterdag', 'Sunday': 'zondag',
-            'January': 'januari', 'February': 'februari', 'March': 'maart', 'April': 'april',
-            'May': 'mei', 'June': 'juni', 'July': 'juli', 'August': 'augustus',
-            'September': 'september', 'October': 'oktober', 'November': 'november', 'December': 'december'
+            "Monday": "maandag",
+            "Tuesday": "dinsdag",
+            "Wednesday": "woensdag",
+            "Thursday": "donderdag",
+            "Friday": "vrijdag",
+            "Saturday": "zaterdag",
+            "Sunday": "zondag",
+            "January": "januari",
+            "February": "februari",
+            "March": "maart",
+            "April": "april",
+            "May": "mei",
+            "June": "juni",
+            "July": "juli",
+            "August": "augustus",
+            "September": "september",
+            "October": "oktober",
+            "November": "november",
+            "December": "december",
         }
         for en, nl in date_dutch.items():
             date_display = date_display.replace(en, nl)
-    except:
-        date_display = metadata.get('date', 'Onbekend')
-    
-    # Statistics
-    stats = metadata.get('statistics', {})
-    avg_price = stats.get('average_eur_mwh', 0)
-    min_price = stats.get('min_eur_mwh', 0)
-    max_price = stats.get('max_eur_mwh', 0)
-    min_hour = stats.get('min_hour', 0)
-    max_hour = stats.get('max_hour', 0)
-    
-    # Retrieved timestamp
-    retrieved_at = metadata.get('retrieved_at', '')
+    except Exception:
+        date_display = metadata.get("date", "Onbekend")
+
+    # Statistieken
+    stats = metadata.get("statistics", {})
+    avg_price = stats.get("average_eur_mwh", 0)
+    min_price = stats.get("min_eur_mwh", 0)
+    max_price = stats.get("max_eur_mwh", 0)
+    min_hour = stats.get("min_hour", 0)
+    max_hour = stats.get("max_hour", 0)
+
+    # Retrieval-timestamp
+    retrieved_at = metadata.get("retrieved_at", "")
     try:
         retrieved_dt = datetime.fromisoformat(retrieved_at)
-        retrieved_display = retrieved_dt.strftime('%d/%m/%Y om %H:%M')
-    except:
-        retrieved_display = 'Onbekend'
-    
-    html = f'''<!DOCTYPE html>
+        retrieved_display = (
+            retrieved_dt.astimezone(LOCAL_TZ).strftime("%d/%m/%Y om %H:%M")
+        )
+    except Exception:
+        retrieved_display = "Onbekend"
+
+    html = f"""<!DOCTYPE html>
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
@@ -410,13 +426,14 @@ def generate_html_report(data):
     </div>
   </div>
 </body>
-</html>'''
-    
+</html>"""
+
     return html
+
 
 def generate_error_page():
     """Generate error page matching the dark theme"""
-    return '''<!DOCTYPE html>
+    return """<!DOCTYPE html>
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
@@ -459,19 +476,18 @@ def generate_error_page():
     <p>Probeer het later opnieuw of controleer de <a href="https://github.com/dsoubry/machinery/actions">GitHub Actions</a> voor meer informatie.</p>
   </div>
 </body>
-</html>'''
+</html>"""
+
 
 def main():
-    """Generate HTML report matching original design"""
-    print("🌐 Generating HTML report with original dark theme...")
-    
+    """Generate HTML report"""
+    print("🌐 Generating HTML report...")
     data = load_latest_data()
     html_content = generate_html_report(data)
-    
-    with open('index.html', 'w', encoding='utf-8') as f:
+    with open("index.html", "w", encoding="utf-8") as f:
         f.write(html_content)
-    
-    print("✅ Dark theme index.html generated")
+    print("✅ index.html generated")
+
 
 if __name__ == "__main__":
     main()
