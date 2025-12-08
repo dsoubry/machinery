@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Generate HTML report for Belgian day-ahead electricity prices
-Compatible with GitHub Pages deployment
+Generate clean HTML report for Belgian day-ahead electricity prices
+Simple layout that respects the original design
 """
 
 import json
@@ -21,116 +21,60 @@ def load_latest_data():
         return None
 
 def format_price_table(prices):
-    """Generate HTML table with price data"""
+    """Generate simple HTML table with price data"""
     if not prices:
         return "<p>Geen prijsdata beschikbaar</p>"
     
-    html = """
-    <div class="table-responsive">
-        <table class="table table-striped table-hover">
-            <thead class="table-dark">
-                <tr>
-                    <th>Uur</th>
-                    <th>Tijdstip</th>
-                    <th>Prijs (€/MWh)</th>
-                    <th>Prijs (€/kWh)</th>
-                    <th>Prijs (cent/kWh)</th>
-                    <th>Indicator</th>
-                </tr>
-            </thead>
-            <tbody>
-    """
-    
-    # Find min/max for color coding
+    # Find min/max for highlighting
     price_values = [p['price_eur_mwh'] for p in prices]
     min_price = min(price_values)
     max_price = max(price_values)
     
+    html = """
+    <table>
+        <thead>
+            <tr>
+                <th>Uur</th>
+                <th>Tijdstip</th>
+                <th>Prijs (€/MWh)</th>
+                <th>Prijs (€/kWh)</th>
+                <th>Prijs (cent/kWh)</th>
+            </tr>
+        </thead>
+        <tbody>
+    """
+    
     for price in prices:
-        # Color coding
+        # Simple styling
+        row_class = ""
         if price['price_eur_mwh'] == min_price:
-            row_class = "table-success"
-            indicator = "🟢 Laagste"
+            row_class = ' class="lowest"'
         elif price['price_eur_mwh'] == max_price:
-            row_class = "table-danger" 
-            indicator = "🔴 Hoogste"
-        elif price['price_eur_mwh'] < (min_price + max_price) / 2:
-            row_class = "table-light"
-            indicator = "🟡 Laag"
-        else:
-            row_class = ""
-            indicator = "🟠 Hoog"
+            row_class = ' class="highest"'
         
         # Parse datetime for display
         dt = datetime.fromisoformat(price['datetime'].replace('Z', '+00:00'))
         time_str = dt.strftime('%H:%M')
         
         html += f"""
-                <tr class="{row_class}">
-                    <td><strong>{price['hour']:02d}</strong></td>
-                    <td>{time_str}</td>
-                    <td>€{price['price_eur_mwh']:.2f}</td>
-                    <td>€{price['price_eur_kwh']:.4f}</td>
-                    <td>{price['price_cent_kwh']:.2f}</td>
-                    <td>{indicator}</td>
-                </tr>
+            <tr{row_class}>
+                <td>{price['hour']:02d}</td>
+                <td>{time_str}</td>
+                <td>€{price['price_eur_mwh']:.2f}</td>
+                <td>€{price['price_eur_kwh']:.4f}</td>
+                <td>{price['price_cent_kwh']:.2f}</td>
+            </tr>
         """
     
     html += """
-            </tbody>
-        </table>
-    </div>
+        </tbody>
+    </table>
     """
     
     return html
 
-def generate_statistics_cards(metadata):
-    """Generate Bootstrap cards with statistics"""
-    stats = metadata.get('statistics', {})
-    
-    return f"""
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card text-white bg-primary">
-                <div class="card-header">Gemiddelde Prijs</div>
-                <div class="card-body">
-                    <h4 class="card-title">€{stats.get('average_eur_mwh', 0):.2f}/MWh</h4>
-                    <p class="card-text">{stats.get('average_eur_mwh', 0)/10:.2f} cent/kWh</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-success">
-                <div class="card-header">Laagste Prijs</div>
-                <div class="card-body">
-                    <h4 class="card-title">€{stats.get('min_eur_mwh', 0):.2f}/MWh</h4>
-                    <p class="card-text">Uur {stats.get('min_hour', 0):02d}:00</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-danger">
-                <div class="card-header">Hoogste Prijs</div>
-                <div class="card-body">
-                    <h4 class="card-title">€{stats.get('max_eur_mwh', 0):.2f}/MWh</h4>
-                    <p class="card-text">Uur {stats.get('max_hour', 0):02d}:00</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-info">
-                <div class="card-header">Data Punten</div>
-                <div class="card-body">
-                    <h4 class="card-title">{metadata.get('data_points', 0)}</h4>
-                    <p class="card-text">Uurlijkse prijzen</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    """
-
 def generate_html_report(data):
-    """Generate complete HTML report"""
+    """Generate clean, minimal HTML report"""
     if not data:
         return generate_error_page()
     
@@ -140,19 +84,19 @@ def generate_html_report(data):
     # Parse date for display
     try:
         date_obj = datetime.fromisoformat(metadata.get('date', ''))
-        date_display = date_obj.strftime('%A %d %B %Y')
-        date_dutch = {
-            'Monday': 'Maandag', 'Tuesday': 'Dinsdag', 'Wednesday': 'Woensdag',
-            'Thursday': 'Donderdag', 'Friday': 'Vrijdag', 'Saturday': 'Zaterdag', 'Sunday': 'Zondag',
-            'January': 'januari', 'February': 'februari', 'March': 'maart', 'April': 'april',
-            'May': 'mei', 'June': 'juni', 'July': 'juli', 'August': 'augustus',
-            'September': 'september', 'October': 'oktober', 'November': 'november', 'December': 'december'
-        }
-        for en, nl in date_dutch.items():
-            date_display = date_display.replace(en, nl)
+        date_display = date_obj.strftime('%d/%m/%Y')
     except:
         date_display = metadata.get('date', 'Onbekend')
     
+    # Statistics
+    stats = metadata.get('statistics', {})
+    avg_price = stats.get('average_eur_mwh', 0)
+    min_price = stats.get('min_eur_mwh', 0)
+    max_price = stats.get('max_eur_mwh', 0)
+    min_hour = stats.get('min_hour', 0)
+    max_hour = stats.get('max_hour', 0)
+    
+    # Retrieved timestamp
     retrieved_at = metadata.get('retrieved_at', '')
     try:
         retrieved_dt = datetime.fromisoformat(retrieved_at)
@@ -160,102 +104,227 @@ def generate_html_report(data):
     except:
         retrieved_display = 'Onbekend'
     
+    # Price data for chart
+    chart_data = {
+        'labels': [f"{p['hour']:02d}:00" for p in prices],
+        'prices': [p['price_eur_mwh'] for p in prices]
+    }
+    
     html = f"""<!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Belgische Dag-Vooruit Elektriciteitsprijzen - {date_display}</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Belgian Electricity Prices - {date_display}</title>
     
     <style>
         body {{
-            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f9f9f9;
+            color: #333;
         }}
-        .header {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2rem 0;
-            margin-bottom: 2rem;
-        }}
-        .chart-container {{
+        
+        .container {{
+            max-width: 1200px;
+            margin: 0 auto;
             background: white;
+            padding: 30px;
             border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }}
-        .footer {{
-            margin-top: 3rem;
-            padding: 2rem 0;
-            background: #343a40;
+        
+        h1 {{
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }}
+        
+        .subtitle {{
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }}
+        
+        .stats {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }}
+        
+        .stat-box {{
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 6px;
+            text-align: center;
+        }}
+        
+        .stat-value {{
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }}
+        
+        .stat-label {{
+            color: #7f8c8d;
+            font-size: 14px;
+        }}
+        
+        .chart-container {{
+            margin: 30px 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 20px;
+        }}
+        
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }}
+        
+        th, td {{
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }}
+        
+        th {{
+            background: #34495e;
             color: white;
+            font-weight: bold;
+        }}
+        
+        tr:hover {{
+            background: #f5f5f5;
+        }}
+        
+        .lowest {{
+            background: #d5f4e6 !important;
+            font-weight: bold;
+        }}
+        
+        .highest {{
+            background: #fadbd8 !important;
+            font-weight: bold;
+        }}
+        
+        .footer {{
+            margin-top: 30px;
+            padding: 20px;
+            background: #ecf0f1;
+            border-radius: 6px;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 14px;
+        }}
+        
+        .tips {{
+            margin: 20px 0;
+            padding: 20px;
+            background: #e8f5e8;
+            border-left: 4px solid #27ae60;
+            border-radius: 0 6px 6px 0;
+        }}
+        
+        .tips h3 {{
+            margin-top: 0;
+            color: #27ae60;
+        }}
+        
+        .tips ul {{
+            margin-bottom: 0;
+        }}
+        
+        canvas {{
+            max-width: 100%;
+            height: 300px;
+        }}
+        
+        @media (max-width: 768px) {{
+            body {{
+                margin: 10px;
+            }}
+            .container {{
+                padding: 20px;
+            }}
+            .stats {{
+                grid-template-columns: 1fr;
+            }}
+            table {{
+                font-size: 14px;
+            }}
         }}
     </style>
 </head>
 <body>
-    <header class="header">
-        <div class="container">
-            <h1 class="display-4">🇧🇪 Belgische Elektriciteitsprijzen</h1>
-            <p class="lead">Dag-vooruit prijzen voor {date_display}</p>
-            <p class="mb-0">Gegevens van {metadata.get('source', 'ENTSO-E')} • Laatst bijgewerkt: {retrieved_display}</p>
+    <div class="container">
+        <h1>🇧🇪 Belgian Electricity Prices</h1>
+        <p class="subtitle">Day-ahead prices for {date_display} • Data from {metadata.get('source', 'ENTSO-E')}</p>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-value">€{avg_price:.2f}</div>
+                <div class="stat-label">Average (€/MWh)</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">€{min_price:.2f}</div>
+                <div class="stat-label">Lowest ({min_hour:02d}:00)</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">€{max_price:.2f}</div>
+                <div class="stat-label">Highest ({max_hour:02d}:00)</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">{metadata.get('data_points', 0)}</div>
+                <div class="stat-label">Data points</div>
+            </div>
         </div>
-    </header>
-
-    <main class="container">
-        {generate_statistics_cards(metadata)}
         
         <div class="chart-container">
-            <h3>Prijsverloop van de dag</h3>
-            <canvas id="priceChart" height="100"></canvas>
+            <h3>Hourly Price Chart</h3>
+            <canvas id="priceChart"></canvas>
         </div>
         
-        <div class="chart-container">
-            <h3>Gedetailleerde prijstabel</h3>
-            {format_price_table(prices)}
-        </div>
-        
-        <div class="alert alert-info">
-            <h5>💡 Tips voor energiebesparing:</h5>
-            <ul class="mb-0">
-                <li><strong>Gebruik apparaten tijdens goedkope uren</strong> (groene rijen in de tabel)</li>
-                <li><strong>Vermijd hoge verbruik tijdens piekuren</strong> (rode rijen in de tabel)</li>
-                <li><strong>Programmeer je elektrische verwarming en boiler</strong> voor de goedkoopste momenten</li>
-                <li><strong>Laad je elektrische auto op</strong> tijdens de laagste prijzen</li>
+        <div class="tips">
+            <h3>💡 Energy Saving Tips</h3>
+            <ul>
+                <li><strong>Use appliances during low-price hours</strong> (green rows in table below)</li>
+                <li><strong>Avoid high consumption during peak hours</strong> (red rows in table below)</li>
+                <li><strong>Schedule heating and water boiler</strong> for cheapest moments</li>
+                <li><strong>Charge electric vehicles</strong> during lowest prices</li>
             </ul>
         </div>
-    </main>
-
-    <footer class="footer text-center">
-        <div class="container">
-            <p>&copy; 2024 Belgian Energy Price Monitor</p>
-            <p class="small">
-                Data: {metadata.get('source', 'ENTSO-E Transparency Platform')} • 
-                <a href="https://github.com/dsoubry/machinery" class="text-light">GitHub</a>
-            </p>
+        
+        <h3>Detailed Price Table</h3>
+        {format_price_table(prices)}
+        
+        <div class="footer">
+            <p>Data updated: {retrieved_display} • Source: {metadata.get('source', 'ENTSO-E Transparency Platform')}</p>
+            <p><a href="https://github.com/dsoubry/machinery" style="color: #3498db;">GitHub Repository</a> | 
+               <a href="https://transparency.entsoe.eu/" style="color: #3498db;">ENTSO-E Platform</a></p>
         </div>
-    </footer>
+    </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Chart.js configuration
+        // Simple chart
         const ctx = document.getElementById('priceChart').getContext('2d');
-        const priceData = {json.dumps([p['price_eur_mwh'] for p in prices])};
-        const hourLabels = {json.dumps([f"{p['hour']:02d}:00" for p in prices])};
         
         new Chart(ctx, {{
             type: 'line',
             data: {{
-                labels: hourLabels,
+                labels: {json.dumps(chart_data['labels'])},
                 datasets: [{{
-                    label: 'Prijs (€/MWh)',
-                    data: priceData,
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    label: 'Price (€/MWh)',
+                    data: {json.dumps(chart_data['prices'])},
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
                     borderWidth: 2,
                     fill: true,
                     tension: 0.1
@@ -263,11 +332,8 @@ def generate_html_report(data):
             }},
             options: {{
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {{
-                    title: {{
-                        display: true,
-                        text: 'Uurlijkse Elektriciteitsprijzen'
-                    }},
                     legend: {{
                         display: false
                     }}
@@ -276,14 +342,14 @@ def generate_html_report(data):
                     y: {{
                         title: {{
                             display: true,
-                            text: 'Prijs (€/MWh)'
+                            text: 'Price (€/MWh)'
                         }},
                         beginAtZero: false
                     }},
                     x: {{
                         title: {{
                             display: true,
-                            text: 'Tijdstip'
+                            text: 'Hour'
                         }}
                     }}
                 }}
@@ -296,29 +362,43 @@ def generate_html_report(data):
     return html
 
 def generate_error_page():
-    """Generate error page when no data is available"""
+    """Generate simple error page"""
     return """<!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Belgische Elektriciteitsprijzen - Geen Data</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Belgian Electricity Prices - No Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 50px;
+            text-align: center;
+            background: #f9f9f9;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+    </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <div class="alert alert-warning text-center">
-            <h2>❌ Geen prijsdata beschikbaar</h2>
-            <p>De dag-vooruit prijzen zijn momenteel niet beschikbaar.</p>
-            <p>Probeer het later opnieuw of controleer de GitHub Actions voor meer informatie.</p>
-        </div>
+    <div class="container">
+        <h1>⚠️ No Price Data Available</h1>
+        <p>Day-ahead electricity prices are currently not available.</p>
+        <p>Please try again later or check the GitHub Actions for more information.</p>
+        <p><a href="https://github.com/dsoubry/machinery/actions">View GitHub Actions</a></p>
     </div>
 </body>
 </html>"""
 
 def main():
-    """Generate HTML report"""
-    print("🌐 Genereren HTML rapport...")
+    """Generate clean HTML report"""
+    print("🌐 Generating clean HTML report...")
     
     data = load_latest_data()
     html_content = generate_html_report(data)
@@ -326,7 +406,7 @@ def main():
     with open('index.html', 'w', encoding='utf-8') as f:
         f.write(html_content)
     
-    print("✅ index.html gegenereerd")
+    print("✅ Clean index.html generated")
 
 if __name__ == "__main__":
     main()
