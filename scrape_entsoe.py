@@ -106,14 +106,44 @@ def parse_entsoe_response(root, namespaces, target_date_utc):
     print(f"🎯 Doeldatum (lokale tijd): {target_date_local}")
 
     # Find TimeSeries
-    if namespaces:
-        ts_list = root.findall(".//ns:TimeSeries", namespaces)
-    else:
-        ts_list = [e for e in root.iter() if e.tag.endswith("TimeSeries")]
+# ---------------------------------------------------------
+# FILTER ONLY THE OFFICIAL BIDDING ZONE PRICE SERIES (A44 – GL)
+# ---------------------------------------------------------
 
-    print(f"🔍 {len(ts_list)} TimeSeries gevonden")
+ts_candidates = []
 
-    for ts in ts_list:
+if namespaces:
+    ts_list = root.findall(".//ns:TimeSeries", namespaces)
+else:
+    ts_list = [e for e in root.iter() if e.tag.endswith("TimeSeries")]
+
+for ts in ts_list:
+    # find businessType
+    bt = None
+    for el in ts.iter():
+        if el.tag.endswith("businessType") or el.tag == "businessType":
+            bt = el.text.strip()
+            break
+
+    # find curveType (optional)
+    ct = None
+    for el in ts.iter():
+        if el.tag.endswith("curveType") or el.tag == "curveType":
+            ct = el.text.strip()
+            break
+
+    # Accept only Bidding Zone Day-Ahead Price (A44 + GL)
+    if bt == "A44" and (ct == "GL" or ct is None):
+        ts_candidates.append(ts)
+
+# If nothing matched (rare), fallback to the first TimeSeries
+if not ts_candidates:
+    ts_candidates = ts_list[:1]
+
+print(f"🔍 Geselecteerde TimeSeries voor dagprijs: {len(ts_candidates)}")
+
+
+    for ts in ts_candidates:
         # Find Period
         if namespaces:
             period = ts.find(".//ns:Period", namespaces)
@@ -315,3 +345,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
