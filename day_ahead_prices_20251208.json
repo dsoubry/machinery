@@ -2,47 +2,187 @@
   "metadata": {
     "source": "ENTSO-E Transparency Platform",
     "date": "2025-12-08",
-    "retrieved_at": "2025-12-08T16:00:48.362708",
+    "retrieved_at": "2025-12-08T16:22:03.154038",
     "timezone": "Europe/Brussels",
-    "data_points": 4,
-    "resolution": "PT15M",
+    "data_points": 24,
+    "resolution": "PT60M",
     "statistics": {
-      "average_eur_mwh": 64.55,
-      "min_eur_mwh": 58.91,
-      "max_eur_mwh": 71.57,
+      "average_eur_mwh": 63.86,
+      "min_eur_mwh": 7.36,
+      "max_eur_mwh": 97.67,
       "min_hour": 4,
-      "max_hour": 1,
-      "price_spread": 12.66
+      "max_hour": 18,
+      "price_spread": 90.31
     }
   },
   "prices": [
     {
       "hour": 1,
-      "datetime": "2025-12-09T00:00:00+01:00",
-      "price_eur_mwh": 71.57,
-      "price_eur_kwh": 0.0716,
-      "price_cent_kwh": 7.16
+      "datetime": "2025-12-08T00:00:00+01:00",
+      "price_eur_mwh": 17.63,
+      "price_eur_kwh": 0.0176,
+      "price_cent_kwh": 1.76
     },
     {
       "hour": 2,
-      "datetime": "2025-12-09T00:15:00+01:00",
-      "price_eur_mwh": 66.14,
-      "price_eur_kwh": 0.0661,
-      "price_cent_kwh": 6.61
+      "datetime": "2025-12-08T01:00:00+01:00",
+      "price_eur_mwh": 11.66,
+      "price_eur_kwh": 0.0117,
+      "price_cent_kwh": 1.17
     },
     {
       "hour": 3,
-      "datetime": "2025-12-09T00:30:00+01:00",
-      "price_eur_mwh": 61.58,
-      "price_eur_kwh": 0.0616,
-      "price_cent_kwh": 6.16
+      "datetime": "2025-12-08T02:00:00+01:00",
+      "price_eur_mwh": 11.05,
+      "price_eur_kwh": 0.011,
+      "price_cent_kwh": 1.1
     },
     {
       "hour": 4,
-      "datetime": "2025-12-09T00:45:00+01:00",
-      "price_eur_mwh": 58.91,
-      "price_eur_kwh": 0.0589,
-      "price_cent_kwh": 5.89
+      "datetime": "2025-12-08T03:00:00+01:00",
+      "price_eur_mwh": 7.36,
+      "price_eur_kwh": 0.0074,
+      "price_cent_kwh": 0.74
+    },
+    {
+      "hour": 5,
+      "datetime": "2025-12-08T04:00:00+01:00",
+      "price_eur_mwh": 12.85,
+      "price_eur_kwh": 0.0129,
+      "price_cent_kwh": 1.29
+    },
+    {
+      "hour": 6,
+      "datetime": "2025-12-08T05:00:00+01:00",
+      "price_eur_mwh": 25.21,
+      "price_eur_kwh": 0.0252,
+      "price_cent_kwh": 2.52
+    },
+    {
+      "hour": 7,
+      "datetime": "2025-12-08T06:00:00+01:00",
+      "price_eur_mwh": 57.71,
+      "price_eur_kwh": 0.0577,
+      "price_cent_kwh": 5.77
+    },
+    {
+      "hour": 8,
+      "datetime": "2025-12-08T07:00:00+01:00",
+      "price_eur_mwh": 77.68,
+      "price_eur_kwh": 0.0777,
+      "price_cent_kwh": 7.77
+    },
+    {
+      "hour": 9,
+      "datetime": "2025-12-08T08:00:00+01:00",
+      "price_eur_mwh": 90.94,
+      "price_eur_kwh": 0.0909,
+      "price_cent_kwh": 9.09
+    },
+    {
+      "hour": 10,
+      "datetime": "2025-12-08T09:00:00+01:00",
+      "price_eur_mwh": 87.24,
+      "price_eur_kwh": 0.0872,
+      "price_cent_kwh": 8.72
+    },
+    {
+      "hour": 11,
+      "datetime": "2025-12-08T10:00:00+01:00",
+      "price_eur_mwh": 76.54,
+      "price_eur_kwh": 0.0765,
+      "price_cent_kwh": 7.65
+    },
+    {
+      "hour": 12,
+      "datetime": "2025-12-08T11:00:00+01:00",
+      "price_eur_mwh": 69.9,
+      "price_eur_kwh": 0.0699,
+      "price_cent_kwh": 6.99
+    },
+    {
+      "hour": 13,
+      "datetime": "2025-12-08T12:00:00+01:00",
+      "price_eur_mwh": 69.08,
+      "price_eur_kwh": 0.0691,
+      "price_cent_kwh": 6.91
+    },
+    {
+      "hour": 14,
+      "datetime": "2025-12-08T13:00:00+01:00",
+      "price_eur_mwh": 73.88,
+      "price_eur_kwh": 0.0739,
+      "price_cent_kwh": 7.39
+    },
+    {
+      "hour": 15,
+      "datetime": "2025-12-08T14:00:00+01:00",
+      "price_eur_mwh": 79.72,
+      "price_eur_kwh": 0.0797,
+      "price_cent_kwh": 7.97
+    },
+    {
+      "hour": 16,
+      "datetime": "2025-12-08T15:00:00+01:00",
+      "price_eur_mwh": 83.28,
+      "price_eur_kwh": 0.0833,
+      "price_cent_kwh": 8.33
+    },
+    {
+      "hour": 17,
+      "datetime": "2025-12-08T16:00:00+01:00",
+      "price_eur_mwh": 89.76,
+      "price_eur_kwh": 0.0898,
+      "price_cent_kwh": 8.98
+    },
+    {
+      "hour": 18,
+      "datetime": "2025-12-08T17:00:00+01:00",
+      "price_eur_mwh": 97.67,
+      "price_eur_kwh": 0.0977,
+      "price_cent_kwh": 9.77
+    },
+    {
+      "hour": 19,
+      "datetime": "2025-12-08T18:00:00+01:00",
+      "price_eur_mwh": 96.97,
+      "price_eur_kwh": 0.097,
+      "price_cent_kwh": 9.7
+    },
+    {
+      "hour": 20,
+      "datetime": "2025-12-08T19:00:00+01:00",
+      "price_eur_mwh": 94.78,
+      "price_eur_kwh": 0.0948,
+      "price_cent_kwh": 9.48
+    },
+    {
+      "hour": 21,
+      "datetime": "2025-12-08T20:00:00+01:00",
+      "price_eur_mwh": 82.6,
+      "price_eur_kwh": 0.0826,
+      "price_cent_kwh": 8.26
+    },
+    {
+      "hour": 22,
+      "datetime": "2025-12-08T21:00:00+01:00",
+      "price_eur_mwh": 75.52,
+      "price_eur_kwh": 0.0755,
+      "price_cent_kwh": 7.55
+    },
+    {
+      "hour": 23,
+      "datetime": "2025-12-08T22:00:00+01:00",
+      "price_eur_mwh": 74.67,
+      "price_eur_kwh": 0.0747,
+      "price_cent_kwh": 7.47
+    },
+    {
+      "hour": 24,
+      "datetime": "2025-12-08T23:00:00+01:00",
+      "price_eur_mwh": 68.99,
+      "price_eur_kwh": 0.069,
+      "price_cent_kwh": 6.9
     }
   ]
 }
