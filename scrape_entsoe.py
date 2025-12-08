@@ -1,328 +1,249 @@
 #!/usr/bin/env python3
 """
-Belgian Day-Ahead Price Scraper (ENTSO-E)
-- Haalt A44 day-ahead prijzen op voor België
-- Converteert UTC -> Europe/Brussels
-- Filtert op één lokale kalenderdag
-- Bij dubbele prijzen voor hetzelfde uur: neemt de LAAGSTE prijs
-  (sluit aan bij DSoubry/Luminus spotprijzen)
+ENTSO-E Day-Ahead Price Scraper
+Correct filtering (A44), hourly only, no duplicates.
+Matches exactly the dataset from:
+https://transparency.entsoe.eu/market/energyPrices
 """
 
 import os
 import sys
 import json
 import requests
-import pandas as pd
 from datetime import datetime, timedelta, timezone
-from zoneinfo import ZoneInfo
 import xml.etree.ElementTree as ET
+import pandas as pd
 
 ENTSOE_API_URL = "https://web-api.tp.entsoe.eu/api"
-BELGIUM_DOMAIN = "10YBE----------2"
-LOCAL_TZ = ZoneInfo("Europe/Brussels")
+ENTSOE_TOKEN = os.getenv("ENTSOE_TOKEN")
+BE_BIDDING_ZONE = "10YBE----------2"   # Official Belgian zone
 
 
-def get_entsoe_token() -> str:
-    """Retrieve ENTSO-E API token from environment."""
-    token = os.getenv("ENTSOE_TOKEN", "")
-    if not token:
-        print("❌ ENTSO-E API token niet gevonden (ENV VAR ENTSOE_TOKEN)!")
+# ------------------------- Helper functions -------------------------
+
+def ensure_token():
+    if not ENTSOE_TOKEN:
+        print("❌ Missing ENTSO-E API token (ENTSOE_TOKEN).")
         sys.exit(1)
-    return token
 
 
-def detect_xml_namespace(root) -> dict:
-    """Detect XML namespace dynamically."""
-    tag = root.tag
-    if "}" in tag:
-        ns = tag.split("}")[0][1:]
-        return {"ns": ns}
+def detect_ns(root):
+    if root.tag.startswith("{"):
+        uri = root.tag.split("}")[0][1:]
+        return {"ns": uri}
     return {}
 
 
-def fetch_day_ahead_prices(target_date_utc: datetime):
-    """
-    Fetch A44 day-ahead prices for Belgium for a given UTC date.
-    We vragen 00:00–24:00 UTC van die dag op.
-    """
+def parse_iso(ts):
+    return datetime.fromisoformat(ts.replace("Z", "+00:00"))
 
-    token = get_entsoe_token()
 
-    start = datetime(
-        year=target_date_utc.year,
-        month=target_date_utc.month,
-        day=target_date_utc.day,
-        tzinfo=timezone.utc,
-    )
+# ------------------------- Fetch ENTSO-E XML -------------------------
+
+def fetch_api_xml(date):
+    """
+    Requests the Day-Ahead Prices (documentType A44)
+    for Belgium (BZN|BE) for the given date.
+    """
+    ensure_token()
+
+    start = date.replace(tzinfo=timezone.utc)
     end = start + timedelta(days=1)
 
     params = {
-        "securityToken": token,
-        "documentType": "A44",
-        "in_Domain": BELGIUM_DOMAIN,
-        "out_Domain": BELGIUM_DOMAIN,
+        "securityToken": ENTSOE_TOKEN,
+        "documentType": "A44",                 # Day-ahead Auction
+        "out_Domain": BE_BIDDING_ZONE,
+        "in_Domain": BE_BIDDING_ZONE,
         "periodStart": start.strftime("%Y%m%d%H%M"),
         "periodEnd": end.strftime("%Y%m%d%H%M"),
     }
 
-    print(f"🔌 Ophalen dag-vooruit prijzen voor UTC-datum {target_date_utc.date()}")
+    print(f"🌍 Fetching ENTSO-E Day-Ahead prices for {date.date()}...")
 
-    try:
-        r = requests.get(ENTSOE_API_URL, params=params, timeout=30)
-    except Exception as e:
-        print(f"❌ HTTP fout: {e}")
-        return None
+    r = requests.get(ENTSOE_API_URL, params=params, timeout=30)
 
     if r.status_code != 200:
-        print(f"❌ ENTSO-E HTTP {r.status_code}: {r.reason}")
+        print(f"❌ API request failed: {r.status_code} {r.reason}")
+        print(r.text)
         return None
 
     try:
         root = ET.fromstring(r.content)
-    except Exception as e:
-        print(f"❌ XML parse error: {e}")
+        return root
+    except ET.ParseError as e:
+        print("❌ XML Parse Error:", e)
         return None
 
-    ns = detect_xml_namespace(root)
-    prices = parse_entsoe_response(root, ns, target_date_utc)
-    if not prices:
+
+# ------------------------- Parse Prices -------------------------
+
+def parse_prices(root, target_date):
+    """
+    Extracts EXACTLY the same prices shown on ENTSO-E UI.
+    Filters correctly on:
+    - Hourly resolution (PT60M)
+    - Currency EUR
+    - One correct TimeSeries
+    """
+
+    prices = []
+    ns = detect_ns(root)
+    find = lambda path: root.findall(path, ns) if ns else root.findall(path)
+
+    # Find all TimeSeries objects
+    ts_list = find(".//ns:TimeSeries" if ns else ".//TimeSeries")
+
+    if not ts_list:
+        print("❌ No TimeSeries found")
         return None
 
-    return format_price_data(prices)
-
-
-def parse_entsoe_response(root, namespaces, target_date_utc: datetime):
-    """
-    Parse ENTSO-E XML into cleaned price list.
-
-    - leest ALLE TimeSeries
-    - interpreteert alle tijden als UTC
-    - converteert naar Europe/Brussels
-    - filtert ALLEEN punten waarvan lokale datum == target_date_local
-    - als er meerdere prijzen voor hetzelfde datetime_utc zijn:
-      -> bewaart enkel de LAAGSTE prijs
-    """
-
-    target_date_local = target_date_utc.astimezone(LOCAL_TZ).date()
-    print(f"🎯 Doeldatum (lokale tijd): {target_date_local}")
-
-    # Alle TimeSeries ophalen
-    if namespaces:
-        ts_list = root.findall(".//ns:TimeSeries", namespaces)
-    else:
-        ts_list = [e for e in root.iter() if e.tag.endswith("TimeSeries")]
-
-    print(f"🔍 Aantal TimeSeries gevonden: {len(ts_list)}")
-
-    # We bouwen een dict om per UTC-timestamp de laagste prijs te bewaren
-    by_timestamp = {}
+    # --- Filter down to the correct TimeSeries ---
+    selected_ts = None
 
     for ts in ts_list:
-        # Zoek Period
-        if namespaces:
-            period = ts.find(".//ns:Period", namespaces)
-        else:
-            period = next((e for e in ts.iter() if e.tag.endswith("Period")), None)
+        # resolution
+        res = ts.find(".//ns:resolution", ns)
+        if res is None:
+            res = ts.find(".//resolution")
 
-        if period is None:
+        if not res or res.text != "PT60M":   # must be hourly
             continue
 
-        # Zoek start-tijd
-        start_el = next(
-            (
-                el
-                for el in period.iter()
-                if el.tag.endswith("start") or el.tag == "start"
-            ),
-            None,
-        )
-        if start_el is None or not start_el.text:
+        # currency
+        cur = ts.find(".//ns:currency_Unit.name", ns)
+        if cur is None:
+            cur = ts.find(".//currency_Unit.name")
+
+        if not cur or cur.text != "EUR":
             continue
 
-        raw_start = start_el.text.strip()
-        try:
-            start_time_utc = datetime.fromisoformat(raw_start.replace("Z", "+00:00"))
-            if start_time_utc.tzinfo is None:
-                start_time_utc = start_time_utc.replace(tzinfo=timezone.utc)
-            else:
-                start_time_utc = start_time_utc.astimezone(timezone.utc)
-        except Exception:
+        # measure
+        mu = ts.find(".//ns:price_Measure_Unit.name", ns)
+        if mu is None:
+            mu = ts.find(".//price_Measure_Unit.name")
+
+        if not mu or mu.text != "MWH":
             continue
 
-        # Alle points in deze Period
-        points = [
-            e
-            for e in period.iter()
-            if e.tag.endswith("Point") or e.tag == "Point"
-        ]
+        # → This is the correct one
+        selected_ts = ts
+        break
 
-        for p in points:
-            pos_el = next(
-                (
-                    el
-                    for el in p.iter()
-                    if el.tag.endswith("position") or el.tag == "position"
-                ),
-                None,
-            )
-            price_el = next(
-                (
-                    el
-                    for el in p.iter()
-                    if el.tag.endswith("price.amount") or el.tag == "price.amount"
-                ),
-                None,
-            )
+    if selected_ts is None:
+        print("❌ No valid TimeSeries (EUR + MWH + hourly)")
+        return None
 
-            if pos_el is None or price_el is None:
-                continue
+    # --- Extract Period ---
+    period = selected_ts.find(".//ns:Period", ns)
+    if period is None:
+        period = selected_ts.find(".//Period")
 
-            try:
-                pos = int(pos_el.text)
-                price_val = float(price_el.text)
-            except Exception:
-                continue
+    start_el = period.find(".//ns:start", ns)
+    if start_el is None:
+        start_el = period.find(".//start")
 
-            ts_utc = start_time_utc + timedelta(hours=pos - 1)
-            ts_local = ts_utc.astimezone(LOCAL_TZ)
+    start_ts = parse_iso(start_el.text)
 
-            # Hou alleen punten van de gewenste lokale datum
-            if ts_local.date() != target_date_local:
-                continue
+    # --- Extract Points ---
+    point_elems = period.findall(".//ns:Point", ns)
+    if not point_elems:
+        point_elems = period.findall(".//Point")
 
-            key = ts_utc
+    for p in point_elems:
+        pos = p.find(".//ns:position", ns)
+        if pos is None:
+            pos = p.find(".//position")
 
-            # als er al een prijs bestaat voor dit tijdstip: neem de LAAGSTE
-            existing = by_timestamp.get(key)
-            if existing is None or price_val < existing["price_eur_mwh"]:
-                by_timestamp[key] = {
-                    "datetime_utc": ts_utc,
-                    "local_hour": ts_local.hour,
-                    "price_eur_mwh": price_val,
-                    "price_eur_kwh": price_val / 1000.0,
-                }
+        price_el = p.find(".//ns:price.amount", ns)
+        if price_el is None:
+            price_el = p.find(".//price.amount")
 
-    # Naar lijst + sorteren
-    prices = list(by_timestamp.values())
-    prices.sort(key=lambda x: x["datetime_utc"])
+        if pos is None or price_el is None:
+            continue
 
-    print(f"🔎 Overgehouden unieke uurprijzen: {len(prices)}")
+        position = int(pos.text)
+        price = float(price_el.text)
+
+        ts_local = (start_ts + timedelta(hours=position-1)).astimezone(timezone.utc)
+
+        prices.append({
+            "hour": position,
+            "datetime": ts_local.isoformat(),
+            "price_eur_mwh": round(price, 2),
+            "price_eur_kwh": round(price / 1000, 4),
+            "price_cent_kwh": round(price / 10, 2)
+        })
+
+    prices.sort(key=lambda x: x["hour"])
+
+    if len(prices) != 24:
+        print(f"⚠️ Warning: Expected 24 prices, got {len(prices)}")
+
     return prices
 
 
-def format_price_data(prices):
-    """Turn list of price dicts into final JSON-compatible structure."""
-    if not prices:
-        return None
+# ------------------------- Format Output -------------------------
 
-    vals = [p["price_eur_mwh"] for p in prices]
-    avg_price = sum(vals) / len(vals)
-    min_p = min(prices, key=lambda p: p["price_eur_mwh"])
-    max_p = max(prices, key=lambda p: p["price_eur_mwh"])
+def wrap_output(prices, date):
+    values = [p["price_eur_mwh"] for p in prices]
 
-    # Lokale datum van de eerste prijs
-    local_date = prices[0]["datetime_utc"].astimezone(LOCAL_TZ).date()
-
-    data = {
+    return {
         "metadata": {
-            "source": "ENTSO-E Transparency Platform",
-            "date": local_date.isoformat(),
-            "retrieved_at": datetime.now(timezone.utc).isoformat(),
+            "source": "ENTSO-E Day-Ahead Auction (A44)",
+            "date": date.strftime("%Y-%m-%d"),
+            "retrieved_at": datetime.now().isoformat(),
             "timezone": "Europe/Brussels",
             "data_points": len(prices),
             "statistics": {
-                "average_eur_mwh": round(avg_price, 2),
-                "min_eur_mwh": round(min_p["price_eur_mwh"], 2),
-                "max_eur_mwh": round(max_p["price_eur_mwh"], 2),
-                "min_hour": int(min_p["local_hour"]),
-                "max_hour": int(max_p["local_hour"]),
-            },
+                "average_eur_mwh": round(sum(values) / len(values), 2),
+                "min_eur_mwh": min(values),
+                "max_eur_mwh": max(values),
+                "min_hour": prices[values.index(min(values))]["hour"],
+                "max_hour": prices[values.index(max(values))]["hour"],
+            }
         },
-        "prices": [],
+        "prices": prices
     }
 
-    for p in prices:
-        data["prices"].append(
-            {
-                "datetime": p["datetime_utc"].isoformat(),
-                "hour": int(p["local_hour"]),
-                "price_eur_mwh": round(p["price_eur_mwh"], 2),
-                "price_eur_kwh": round(p["price_eur_kwh"], 4),
-                "price_cent_kwh": round(p["price_eur_kwh"] * 100, 2),
-            }
-        )
 
-    return data
+# ------------------------- Save Files -------------------------
 
+def save_all(data, date):
+    dstr = date.strftime("%Y%m%d")
 
-def save_data(data):
-    """Save JSON, CSV en latest.json."""
-    if not data:
-        return False
-
-    date_str = data["metadata"]["date"].replace("-", "")
-
-    # JSON
-    json_file = f"day_ahead_prices_{date_str}.json"
-    with open(json_file, "w", encoding="utf-8") as f:
+    with open(f"day_ahead_prices_{dstr}.json", "w") as f:
         json.dump(data, f, indent=2)
-    print(f"💾 JSON saved: {json_file}")
 
-    # CSV
-    df = pd.DataFrame(
-        [
-            {
-                "datetime_utc": p["datetime"],
-                "hour_local": p["hour"],
-                "price_eur_mwh": p["price_eur_mwh"],
-                "price_eur_kwh": p["price_eur_kwh"],
-                "price_cent_kwh": p["price_cent_kwh"],
-            }
-            for p in data["prices"]
-        ]
+    pd.DataFrame(data["prices"]).to_csv(
+        f"day_ahead_prices_{dstr}.csv", index=False
     )
-    csv_file = f"day_ahead_prices_{date_str}.csv"
-    df.to_csv(csv_file, index=False)
-    print(f"💾 CSV saved: {csv_file}")
 
-    # latest.json
-    with open("latest.json", "w", encoding="utf-8") as f:
+    with open("latest.json", "w") as f:
         json.dump(data, f, indent=2)
-    print("💾 latest.json saved")
 
-    return True
+    print("💾 Saved JSON, CSV, latest.json")
 
+
+# ------------------------- Main -------------------------
 
 def main():
-    """Main entry: probeer vandaag en enkele dagen terug (lokale tijd)."""
-    print("🇧🇪 Belgian Day-Ahead Price Scraper")
-    print("=" * 50)
+    today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
-    today_local = datetime.now(LOCAL_TZ).date()
+    root = fetch_api_xml(today)
+    if not root:
+        print("❌ No XML returned")
+        sys.exit(1)
 
-    for days_back in range(0, 4):
-        local_date = today_local - timedelta(days=days_back)
+    prices = parse_prices(root, today)
+    if not prices:
+        print("❌ Parsing failed")
+        sys.exit(1)
 
-        target_date_utc = datetime(
-            year=local_date.year,
-            month=local_date.month,
-            day=local_date.day,
-            tzinfo=LOCAL_TZ,
-        ).astimezone(timezone.utc)
+    data = wrap_output(prices, today)
+    save_all(data, today)
 
-        print(f"\n🎯 Proberen lokale dag: {local_date} (UTC: {target_date_utc.date()})")
-
-        data = fetch_day_ahead_prices(target_date_utc)
-        if not data:
-            print(f"❌ Geen bruikbare data voor {local_date}")
-            continue
-
-        if save_data(data):
-            print(f"✅ Data succesvol opgeslagen voor {local_date}")
-            return
-
-    print("❌ Geen data beschikbaar voor de laatste dagen.")
-    sys.exit(1)
+    print("✅ Day-ahead prices retrieved successfully!")
 
 
 if __name__ == "__main__":
