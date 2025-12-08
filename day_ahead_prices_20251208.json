@@ -2,7 +2,7 @@
   "metadata": {
     "source": "ENTSO-E Transparency Platform",
     "date": "2025-12-08",
-    "retrieved_at": "2025-12-08T16:22:03.154038",
+    "retrieved_at": "2025-12-08T16:38:36.984957",
     "timezone": "Europe/Brussels",
     "data_points": 24,
     "resolution": "PT60M",
@@ -13,6 +13,37 @@
       "min_hour": 4,
       "max_hour": 18,
       "price_spread": 90.31
+    },
+    "cheapest_blocks": {
+      "1_hour": {
+        "hour": 4,
+        "time": "2025-12-08T03:00:00+01:00",
+        "price": 7.36
+      },
+      "2_hours": {
+        "start_hour": 3,
+        "end_hour": 4,
+        "start_time": "2025-12-08T02:00:00+01:00",
+        "end_time": "2025-12-08T03:00:00+01:00",
+        "average_price": 9.2,
+        "hours": 2
+      },
+      "3_hours": {
+        "start_hour": 2,
+        "end_hour": 4,
+        "start_time": "2025-12-08T01:00:00+01:00",
+        "end_time": "2025-12-08T03:00:00+01:00",
+        "average_price": 10.02,
+        "hours": 3
+      },
+      "4_hours": {
+        "start_hour": 2,
+        "end_hour": 5,
+        "start_time": "2025-12-08T01:00:00+01:00",
+        "end_time": "2025-12-08T04:00:00+01:00",
+        "average_price": 10.73,
+        "hours": 4
+      }
     }
   },
   "prices": [
