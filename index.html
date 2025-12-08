@@ -3,1009 +3,991 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Belgische Dag-Vooruit Elektriciteitsprijzen - Maandag 08 december 2025</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Belgian Electricity Prices - 08/12/2025</title>
     
     <style>
         body {
-            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f9f9f9;
+            color: #333;
         }
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2rem 0;
-            margin-bottom: 2rem;
-        }
-        .chart-container {
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
             background: white;
+            padding: 30px;
             border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .footer {
-            margin-top: 3rem;
-            padding: 2rem 0;
-            background: #343a40;
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-box {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .chart-container {
+            margin: 30px 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background: #34495e;
             color: white;
+            font-weight: bold;
+        }
+        
+        tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .lowest {
+            background: #d5f4e6 !important;
+            font-weight: bold;
+        }
+        
+        .highest {
+            background: #fadbd8 !important;
+            font-weight: bold;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding: 20px;
+            background: #ecf0f1;
+            border-radius: 6px;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .tips {
+            margin: 20px 0;
+            padding: 20px;
+            background: #e8f5e8;
+            border-left: 4px solid #27ae60;
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .tips h3 {
+            margin-top: 0;
+            color: #27ae60;
+        }
+        
+        .tips ul {
+            margin-bottom: 0;
+        }
+        
+        canvas {
+            max-width: 100%;
+            height: 300px;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                margin: 10px;
+            }
+            .container {
+                padding: 20px;
+            }
+            .stats {
+                grid-template-columns: 1fr;
+            }
+            table {
+                font-size: 14px;
+            }
         }
     </style>
 </head>
 <body>
-    <header class="header">
-        <div class="container">
-            <h1 class="display-4">🇧🇪 Belgische Elektriciteitsprijzen</h1>
-            <p class="lead">Dag-vooruit prijzen voor Maandag 08 december 2025</p>
-            <p class="mb-0">Gegevens van ENTSO-E Transparency Platform • Laatst bijgewerkt: 08/12/2025 om 10:32</p>
-        </div>
-    </header>
-
-    <main class="container">
+    <div class="container">
+        <h1>🇧🇪 Belgian Electricity Prices</h1>
+        <p class="subtitle">Day-ahead prices for 08/12/2025 • Data from ENTSO-E Transparency Platform</p>
         
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card text-white bg-primary">
-                <div class="card-header">Gemiddelde Prijs</div>
-                <div class="card-body">
-                    <h4 class="card-title">€64.46/MWh</h4>
-                    <p class="card-text">6.45 cent/kWh</p>
-                </div>
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-value">€64.46</div>
+                <div class="stat-label">Average (€/MWh)</div>
             </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-success">
-                <div class="card-header">Laagste Prijs</div>
-                <div class="card-body">
-                    <h4 class="card-title">€7.00/MWh</h4>
-                    <p class="card-text">Uur 15:00</p>
-                </div>
+            <div class="stat-box">
+                <div class="stat-value">€7.00</div>
+                <div class="stat-label">Lowest (15:00)</div>
             </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-danger">
-                <div class="card-header">Hoogste Prijs</div>
-                <div class="card-body">
-                    <h4 class="card-title">€105.73/MWh</h4>
-                    <p class="card-text">Uur 72:00</p>
-                </div>
+            <div class="stat-box">
+                <div class="stat-value">€105.73</div>
+                <div class="stat-label">Highest (72:00)</div>
             </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-info">
-                <div class="card-header">Data Punten</div>
-                <div class="card-body">
-                    <h4 class="card-title">95</h4>
-                    <p class="card-text">Uurlijkse prijzen</p>
-                </div>
+            <div class="stat-box">
+                <div class="stat-value">95</div>
+                <div class="stat-label">Data points</div>
             </div>
-        </div>
-    </div>
-    
-        
-        <div class="chart-container">
-            <h3>Prijsverloop van de dag</h3>
-            <canvas id="priceChart" height="100"></canvas>
         </div>
         
         <div class="chart-container">
-            <h3>Gedetailleerde prijstabel</h3>
-            
-    <div class="table-responsive">
-        <table class="table table-striped table-hover">
-            <thead class="table-dark">
-                <tr>
-                    <th>Uur</th>
-                    <th>Tijdstip</th>
-                    <th>Prijs (€/MWh)</th>
-                    <th>Prijs (€/kWh)</th>
-                    <th>Prijs (cent/kWh)</th>
-                    <th>Indicator</th>
-                </tr>
-            </thead>
-            <tbody>
-    
-                <tr class="table-light">
-                    <td><strong>01</strong></td>
-                    <td>00:00</td>
-                    <td>€18.73</td>
-                    <td>€0.0187</td>
-                    <td>1.87</td>
-                    <td>🟡 Laag</td>
-                </tr>
-        
-                <tr class="table-light">
-                    <td><strong>02</strong></td>
-                    <td>01:00</td>
-                    <td>€23.74</td>
-                    <td>€0.0237</td>
-                    <td>2.37</td>
-                    <td>🟡 Laag</td>
-                </tr>
-        
-                <tr class="table-light">
-                    <td><strong>03</strong></td>
-                    <td>02:00</td>
-                    <td>€17.58</td>
-                    <td>€0.0176</td>
-                    <td>1.76</td>
-                    <td>🟡 Laag</td>
-                </tr>
-        
-                <tr class="table-light">
-                    <td><strong>04</strong></td>
-                    <td>03:00</td>
-                    <td>€10.49</td>
-                    <td>€0.0105</td>
-                    <td>1.05</td>
-                    <td>🟡 Laag</td>
-                </tr>
-        
-                <tr class="table-light">
-                    <td><strong>05</strong></td>
-                    <td>04:00</td>
-                    <td>€13.69</td>
-                    <td>€0.0137</td>
-                    <td>1.37</td>
-                    <td>🟡 Laag</td>
-                </tr>
-        
-                <tr class="table-light">
-                    <td><strong>06</strong></td>
-                    <td>05:00</td>
-                    <td>€13.78</td>
-                    <td>€0.0138</td>
-                    <td>1.38</td>
-                    <td>🟡 Laag</td>
-                </tr>
-        
-                <tr class="table-light">
-                    <td><strong>07</strong></td>
-                    <td>06:00</td>
-                    <td>€10.70</td>
-                    <td>€0.0107</td>
-                    <td>1.07</td>
-                    <td>🟡 Laag</td>
-                </tr>
-        
-                <tr class="table-light">
-                    <td><strong>08</strong></td>
-                    <td>07:00</td>
-                    <td>€8.47</td>
-                    <td>€0.0085</td>
-                    <td>0.85</td>
-                    <td>🟡 Laag</td>
-                </tr>
-        
-                <tr class="table-light">
-                    <td><strong>09</strong></td>
-                    <td>08:00</td>
-                    <td>€15.40</td>
-                    <td>€0.0154</td>
-                    <td>1.54</td>
-                    <td>🟡 Laag</td>
-                </tr>
-        
-                <tr class="table-light">
-                    <td><strong>10</strong></td>
-                    <td>09:00</td>
-                    <td>€11.72</td>
-                    <td>€0.0117</td>
-                    <td>1.17</td>
-                    <td>🟡 Laag</td>
-                </tr>
-        
-                <tr class="table-light">
-                    <td><strong>11</strong></td>
-                    <td>10:00</td>
-                    <td>€8.99</td>
-                    <td>€0.0090</td>
-                    <td>0.90</td>
-                    <td>🟡 Laag</td>
-                </tr>
-        
-                <tr class="table-light">
-                    <td><strong>12</strong></td>
-                    <td>11:00</td>
-                    <td>€8.08</td>
-                    <td>€0.0081</td>
-                    <td>0.81</td>
-                    <td>🟡 Laag</td>
-                </tr>
-        
-                <tr class="table-light">
-                    <td><strong>13</strong></td>
-                    <td>12:00</td>
-                    <td>€7.81</td>
-                    <td>€0.0078</td>
-                    <td>0.78</td>
-                    <td>🟡 Laag</td>
-                </tr>
-        
-                <tr class="table-light">
-                    <td><strong>14</strong></td>
-                    <td>13:00</td>
-                    <td>€7.26</td>
-                    <td>€0.0073</td>
-                    <td>0.73</td>
-                    <td>🟡 Laag</td>
-                </tr>
-        
-                <tr class="table-success">
-                    <td><strong>15</strong></td>
-                    <td>14:00</td>
-                    <td>€7.00</td>
-                    <td>€0.0070</td>
-                    <td>0.70</td>
-                    <td>🟢 Laagste</td>
-                </tr>
-        
-                <tr class="table-light">
-                    <td><strong>17</strong></td>
-                    <td>16:00</td>
-                    <td>€7.82</td>
-                    <td>€0.0078</td>
-                    <td>0.78</td>
-                    <td>🟡 Laag</td>
-                </tr>
-        
-                <tr class="table-light">
-                    <td><strong>18</strong></td>
-                    <td>17:00</td>
-                    <td>€9.14</td>
-                    <td>€0.0091</td>
-                    <td>0.91</td>
-                    <td>🟡 Laag</td>
-                </tr>
-        
-                <tr class="table-light">
-                    <td><strong>19</strong></td>
-                    <td>18:00</td>
-                    <td>€12.82</td>
-                    <td>€0.0128</td>
-                    <td>1.28</td>
-                    <td>🟡 Laag</td>
-                </tr>
-        
-                <tr class="table-light">
-                    <td><strong>20</strong></td>
-                    <td>19:00</td>
-                    <td>€21.62</td>
-                    <td>€0.0216</td>
-                    <td>2.16</td>
-                    <td>🟡 Laag</td>
-                </tr>
-        
-                <tr class="table-light">
-                    <td><strong>21</strong></td>
-                    <td>20:00</td>
-                    <td>€13.51</td>
-                    <td>€0.0135</td>
-                    <td>1.35</td>
-                    <td>🟡 Laag</td>
-                </tr>
-        
-                <tr class="table-light">
-                    <td><strong>22</strong></td>
-                    <td>21:00</td>
-                    <td>€15.62</td>
-                    <td>€0.0156</td>
-                    <td>1.56</td>
-                    <td>🟡 Laag</td>
-                </tr>
-        
-                <tr class="table-light">
-                    <td><strong>23</strong></td>
-                    <td>22:00</td>
-                    <td>€29.82</td>
-                    <td>€0.0298</td>
-                    <td>2.98</td>
-                    <td>🟡 Laag</td>
-                </tr>
-        
-                <tr class="table-light">
-                    <td><strong>24</strong></td>
-                    <td>23:00</td>
-                    <td>€41.91</td>
-                    <td>€0.0419</td>
-                    <td>4.19</td>
-                    <td>🟡 Laag</td>
-                </tr>
-        
-                <tr class="table-light">
-                    <td><strong>25</strong></td>
-                    <td>00:00</td>
-                    <td>€33.19</td>
-                    <td>€0.0332</td>
-                    <td>3.32</td>
-                    <td>🟡 Laag</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>26</strong></td>
-                    <td>01:00</td>
-                    <td>€59.20</td>
-                    <td>€0.0592</td>
-                    <td>5.92</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>27</strong></td>
-                    <td>02:00</td>
-                    <td>€62.63</td>
-                    <td>€0.0626</td>
-                    <td>6.26</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>28</strong></td>
-                    <td>03:00</td>
-                    <td>€75.81</td>
-                    <td>€0.0758</td>
-                    <td>7.58</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>29</strong></td>
-                    <td>04:00</td>
-                    <td>€64.17</td>
-                    <td>€0.0642</td>
-                    <td>6.42</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>30</strong></td>
-                    <td>05:00</td>
-                    <td>€79.36</td>
-                    <td>€0.0794</td>
-                    <td>7.94</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>31</strong></td>
-                    <td>06:00</td>
-                    <td>€82.57</td>
-                    <td>€0.0826</td>
-                    <td>8.26</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>32</strong></td>
-                    <td>07:00</td>
-                    <td>€84.61</td>
-                    <td>€0.0846</td>
-                    <td>8.46</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>33</strong></td>
-                    <td>08:00</td>
-                    <td>€88.83</td>
-                    <td>€0.0888</td>
-                    <td>8.88</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>34</strong></td>
-                    <td>09:00</td>
-                    <td>€90.72</td>
-                    <td>€0.0907</td>
-                    <td>9.07</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>35</strong></td>
-                    <td>10:00</td>
-                    <td>€94.93</td>
-                    <td>€0.0949</td>
-                    <td>9.49</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>36</strong></td>
-                    <td>11:00</td>
-                    <td>€89.29</td>
-                    <td>€0.0893</td>
-                    <td>8.93</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>37</strong></td>
-                    <td>12:00</td>
-                    <td>€98.49</td>
-                    <td>€0.0985</td>
-                    <td>9.85</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>38</strong></td>
-                    <td>13:00</td>
-                    <td>€92.96</td>
-                    <td>€0.0930</td>
-                    <td>9.30</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>39</strong></td>
-                    <td>14:00</td>
-                    <td>€83.63</td>
-                    <td>€0.0836</td>
-                    <td>8.36</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>40</strong></td>
-                    <td>15:00</td>
-                    <td>€73.89</td>
-                    <td>€0.0739</td>
-                    <td>7.39</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>41</strong></td>
-                    <td>16:00</td>
-                    <td>€85.76</td>
-                    <td>€0.0858</td>
-                    <td>8.58</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>42</strong></td>
-                    <td>17:00</td>
-                    <td>€76.93</td>
-                    <td>€0.0769</td>
-                    <td>7.69</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>43</strong></td>
-                    <td>18:00</td>
-                    <td>€73.71</td>
-                    <td>€0.0737</td>
-                    <td>7.37</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>44</strong></td>
-                    <td>19:00</td>
-                    <td>€69.77</td>
-                    <td>€0.0698</td>
-                    <td>6.98</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>45</strong></td>
-                    <td>20:00</td>
-                    <td>€71.71</td>
-                    <td>€0.0717</td>
-                    <td>7.17</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>46</strong></td>
-                    <td>21:00</td>
-                    <td>€68.56</td>
-                    <td>€0.0686</td>
-                    <td>6.86</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>47</strong></td>
-                    <td>22:00</td>
-                    <td>€69.24</td>
-                    <td>€0.0692</td>
-                    <td>6.92</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>48</strong></td>
-                    <td>23:00</td>
-                    <td>€70.08</td>
-                    <td>€0.0701</td>
-                    <td>7.01</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>49</strong></td>
-                    <td>00:00</td>
-                    <td>€67.42</td>
-                    <td>€0.0674</td>
-                    <td>6.74</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>50</strong></td>
-                    <td>01:00</td>
-                    <td>€67.24</td>
-                    <td>€0.0672</td>
-                    <td>6.72</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>51</strong></td>
-                    <td>02:00</td>
-                    <td>€68.88</td>
-                    <td>€0.0689</td>
-                    <td>6.89</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>52</strong></td>
-                    <td>03:00</td>
-                    <td>€72.80</td>
-                    <td>€0.0728</td>
-                    <td>7.28</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>53</strong></td>
-                    <td>04:00</td>
-                    <td>€71.44</td>
-                    <td>€0.0714</td>
-                    <td>7.14</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>54</strong></td>
-                    <td>05:00</td>
-                    <td>€74.64</td>
-                    <td>€0.0746</td>
-                    <td>7.46</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>55</strong></td>
-                    <td>06:00</td>
-                    <td>€74.42</td>
-                    <td>€0.0744</td>
-                    <td>7.44</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>56</strong></td>
-                    <td>07:00</td>
-                    <td>€75.00</td>
-                    <td>€0.0750</td>
-                    <td>7.50</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>57</strong></td>
-                    <td>08:00</td>
-                    <td>€67.90</td>
-                    <td>€0.0679</td>
-                    <td>6.79</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>58</strong></td>
-                    <td>09:00</td>
-                    <td>€78.82</td>
-                    <td>€0.0788</td>
-                    <td>7.88</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>59</strong></td>
-                    <td>10:00</td>
-                    <td>€86.69</td>
-                    <td>€0.0867</td>
-                    <td>8.67</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>60</strong></td>
-                    <td>11:00</td>
-                    <td>€85.48</td>
-                    <td>€0.0855</td>
-                    <td>8.55</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>61</strong></td>
-                    <td>12:00</td>
-                    <td>€84.42</td>
-                    <td>€0.0844</td>
-                    <td>8.44</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>62</strong></td>
-                    <td>13:00</td>
-                    <td>€79.29</td>
-                    <td>€0.0793</td>
-                    <td>7.93</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>63</strong></td>
-                    <td>14:00</td>
-                    <td>€83.46</td>
-                    <td>€0.0835</td>
-                    <td>8.35</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>64</strong></td>
-                    <td>15:00</td>
-                    <td>€85.97</td>
-                    <td>€0.0860</td>
-                    <td>8.60</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>65</strong></td>
-                    <td>16:00</td>
-                    <td>€83.07</td>
-                    <td>€0.0831</td>
-                    <td>8.31</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>66</strong></td>
-                    <td>17:00</td>
-                    <td>€91.81</td>
-                    <td>€0.0918</td>
-                    <td>9.18</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>67</strong></td>
-                    <td>18:00</td>
-                    <td>€92.30</td>
-                    <td>€0.0923</td>
-                    <td>9.23</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>68</strong></td>
-                    <td>19:00</td>
-                    <td>€91.86</td>
-                    <td>€0.0919</td>
-                    <td>9.19</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>69</strong></td>
-                    <td>20:00</td>
-                    <td>€90.23</td>
-                    <td>€0.0902</td>
-                    <td>9.02</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>70</strong></td>
-                    <td>21:00</td>
-                    <td>€94.84</td>
-                    <td>€0.0948</td>
-                    <td>9.48</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>71</strong></td>
-                    <td>22:00</td>
-                    <td>€99.86</td>
-                    <td>€0.0999</td>
-                    <td>9.99</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="table-danger">
-                    <td><strong>72</strong></td>
-                    <td>23:00</td>
-                    <td>€105.73</td>
-                    <td>€0.1057</td>
-                    <td>10.57</td>
-                    <td>🔴 Hoogste</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>73</strong></td>
-                    <td>00:00</td>
-                    <td>€96.99</td>
-                    <td>€0.0970</td>
-                    <td>9.70</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>74</strong></td>
-                    <td>01:00</td>
-                    <td>€94.86</td>
-                    <td>€0.0949</td>
-                    <td>9.49</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>75</strong></td>
-                    <td>02:00</td>
-                    <td>€100.10</td>
-                    <td>€0.1001</td>
-                    <td>10.01</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>76</strong></td>
-                    <td>03:00</td>
-                    <td>€95.93</td>
-                    <td>€0.0959</td>
-                    <td>9.59</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>77</strong></td>
-                    <td>04:00</td>
-                    <td>€98.61</td>
-                    <td>€0.0986</td>
-                    <td>9.86</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>78</strong></td>
-                    <td>05:00</td>
-                    <td>€95.53</td>
-                    <td>€0.0955</td>
-                    <td>9.55</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>79</strong></td>
-                    <td>06:00</td>
-                    <td>€93.94</td>
-                    <td>€0.0939</td>
-                    <td>9.39</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>80</strong></td>
-                    <td>07:00</td>
-                    <td>€91.03</td>
-                    <td>€0.0910</td>
-                    <td>9.10</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>81</strong></td>
-                    <td>08:00</td>
-                    <td>€95.57</td>
-                    <td>€0.0956</td>
-                    <td>9.56</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>82</strong></td>
-                    <td>09:00</td>
-                    <td>€89.88</td>
-                    <td>€0.0899</td>
-                    <td>8.99</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>83</strong></td>
-                    <td>10:00</td>
-                    <td>€78.33</td>
-                    <td>€0.0783</td>
-                    <td>7.83</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>84</strong></td>
-                    <td>11:00</td>
-                    <td>€66.63</td>
-                    <td>€0.0666</td>
-                    <td>6.66</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>85</strong></td>
-                    <td>12:00</td>
-                    <td>€82.82</td>
-                    <td>€0.0828</td>
-                    <td>8.28</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>86</strong></td>
-                    <td>13:00</td>
-                    <td>€80.21</td>
-                    <td>€0.0802</td>
-                    <td>8.02</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>87</strong></td>
-                    <td>14:00</td>
-                    <td>€76.72</td>
-                    <td>€0.0767</td>
-                    <td>7.67</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>88</strong></td>
-                    <td>15:00</td>
-                    <td>€62.34</td>
-                    <td>€0.0623</td>
-                    <td>6.23</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>89</strong></td>
-                    <td>16:00</td>
-                    <td>€85.73</td>
-                    <td>€0.0857</td>
-                    <td>8.57</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>90</strong></td>
-                    <td>17:00</td>
-                    <td>€79.91</td>
-                    <td>€0.0799</td>
-                    <td>7.99</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>91</strong></td>
-                    <td>18:00</td>
-                    <td>€71.10</td>
-                    <td>€0.0711</td>
-                    <td>7.11</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>92</strong></td>
-                    <td>19:00</td>
-                    <td>€61.96</td>
-                    <td>€0.0620</td>
-                    <td>6.20</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>93</strong></td>
-                    <td>20:00</td>
-                    <td>€77.81</td>
-                    <td>€0.0778</td>
-                    <td>7.78</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>94</strong></td>
-                    <td>21:00</td>
-                    <td>€68.68</td>
-                    <td>€0.0687</td>
-                    <td>6.87</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>95</strong></td>
-                    <td>22:00</td>
-                    <td>€69.43</td>
-                    <td>€0.0694</td>
-                    <td>6.94</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-                <tr class="">
-                    <td><strong>96</strong></td>
-                    <td>23:00</td>
-                    <td>€60.03</td>
-                    <td>€0.0600</td>
-                    <td>6.00</td>
-                    <td>🟠 Hoog</td>
-                </tr>
-        
-            </tbody>
-        </table>
-    </div>
-    
+            <h3>Hourly Price Chart</h3>
+            <canvas id="priceChart"></canvas>
         </div>
         
-        <div class="alert alert-info">
-            <h5>💡 Tips voor energiebesparing:</h5>
-            <ul class="mb-0">
-                <li><strong>Gebruik apparaten tijdens goedkope uren</strong> (groene rijen in de tabel)</li>
-                <li><strong>Vermijd hoge verbruik tijdens piekuren</strong> (rode rijen in de tabel)</li>
-                <li><strong>Programmeer je elektrische verwarming en boiler</strong> voor de goedkoopste momenten</li>
-                <li><strong>Laad je elektrische auto op</strong> tijdens de laagste prijzen</li>
+        <div class="tips">
+            <h3>💡 Energy Saving Tips</h3>
+            <ul>
+                <li><strong>Use appliances during low-price hours</strong> (green rows in table below)</li>
+                <li><strong>Avoid high consumption during peak hours</strong> (red rows in table below)</li>
+                <li><strong>Schedule heating and water boiler</strong> for cheapest moments</li>
+                <li><strong>Charge electric vehicles</strong> during lowest prices</li>
             </ul>
         </div>
-    </main>
-
-    <footer class="footer text-center">
-        <div class="container">
-            <p>&copy; 2024 Belgian Energy Price Monitor</p>
-            <p class="small">
-                Data: ENTSO-E Transparency Platform • 
-                <a href="https://github.com/dsoubry/machinery" class="text-light">GitHub</a>
-            </p>
+        
+        <h3>Detailed Price Table</h3>
+        
+    <table>
+        <thead>
+            <tr>
+                <th>Uur</th>
+                <th>Tijdstip</th>
+                <th>Prijs (€/MWh)</th>
+                <th>Prijs (€/kWh)</th>
+                <th>Prijs (cent/kWh)</th>
+            </tr>
+        </thead>
+        <tbody>
+    
+            <tr>
+                <td>01</td>
+                <td>00:00</td>
+                <td>€18.73</td>
+                <td>€0.0187</td>
+                <td>1.87</td>
+            </tr>
+        
+            <tr>
+                <td>02</td>
+                <td>01:00</td>
+                <td>€23.74</td>
+                <td>€0.0237</td>
+                <td>2.37</td>
+            </tr>
+        
+            <tr>
+                <td>03</td>
+                <td>02:00</td>
+                <td>€17.58</td>
+                <td>€0.0176</td>
+                <td>1.76</td>
+            </tr>
+        
+            <tr>
+                <td>04</td>
+                <td>03:00</td>
+                <td>€10.49</td>
+                <td>€0.0105</td>
+                <td>1.05</td>
+            </tr>
+        
+            <tr>
+                <td>05</td>
+                <td>04:00</td>
+                <td>€13.69</td>
+                <td>€0.0137</td>
+                <td>1.37</td>
+            </tr>
+        
+            <tr>
+                <td>06</td>
+                <td>05:00</td>
+                <td>€13.78</td>
+                <td>€0.0138</td>
+                <td>1.38</td>
+            </tr>
+        
+            <tr>
+                <td>07</td>
+                <td>06:00</td>
+                <td>€10.70</td>
+                <td>€0.0107</td>
+                <td>1.07</td>
+            </tr>
+        
+            <tr>
+                <td>08</td>
+                <td>07:00</td>
+                <td>€8.47</td>
+                <td>€0.0085</td>
+                <td>0.85</td>
+            </tr>
+        
+            <tr>
+                <td>09</td>
+                <td>08:00</td>
+                <td>€15.40</td>
+                <td>€0.0154</td>
+                <td>1.54</td>
+            </tr>
+        
+            <tr>
+                <td>10</td>
+                <td>09:00</td>
+                <td>€11.72</td>
+                <td>€0.0117</td>
+                <td>1.17</td>
+            </tr>
+        
+            <tr>
+                <td>11</td>
+                <td>10:00</td>
+                <td>€8.99</td>
+                <td>€0.0090</td>
+                <td>0.90</td>
+            </tr>
+        
+            <tr>
+                <td>12</td>
+                <td>11:00</td>
+                <td>€8.08</td>
+                <td>€0.0081</td>
+                <td>0.81</td>
+            </tr>
+        
+            <tr>
+                <td>13</td>
+                <td>12:00</td>
+                <td>€7.81</td>
+                <td>€0.0078</td>
+                <td>0.78</td>
+            </tr>
+        
+            <tr>
+                <td>14</td>
+                <td>13:00</td>
+                <td>€7.26</td>
+                <td>€0.0073</td>
+                <td>0.73</td>
+            </tr>
+        
+            <tr class="lowest">
+                <td>15</td>
+                <td>14:00</td>
+                <td>€7.00</td>
+                <td>€0.0070</td>
+                <td>0.70</td>
+            </tr>
+        
+            <tr>
+                <td>17</td>
+                <td>16:00</td>
+                <td>€7.82</td>
+                <td>€0.0078</td>
+                <td>0.78</td>
+            </tr>
+        
+            <tr>
+                <td>18</td>
+                <td>17:00</td>
+                <td>€9.14</td>
+                <td>€0.0091</td>
+                <td>0.91</td>
+            </tr>
+        
+            <tr>
+                <td>19</td>
+                <td>18:00</td>
+                <td>€12.82</td>
+                <td>€0.0128</td>
+                <td>1.28</td>
+            </tr>
+        
+            <tr>
+                <td>20</td>
+                <td>19:00</td>
+                <td>€21.62</td>
+                <td>€0.0216</td>
+                <td>2.16</td>
+            </tr>
+        
+            <tr>
+                <td>21</td>
+                <td>20:00</td>
+                <td>€13.51</td>
+                <td>€0.0135</td>
+                <td>1.35</td>
+            </tr>
+        
+            <tr>
+                <td>22</td>
+                <td>21:00</td>
+                <td>€15.62</td>
+                <td>€0.0156</td>
+                <td>1.56</td>
+            </tr>
+        
+            <tr>
+                <td>23</td>
+                <td>22:00</td>
+                <td>€29.82</td>
+                <td>€0.0298</td>
+                <td>2.98</td>
+            </tr>
+        
+            <tr>
+                <td>24</td>
+                <td>23:00</td>
+                <td>€41.91</td>
+                <td>€0.0419</td>
+                <td>4.19</td>
+            </tr>
+        
+            <tr>
+                <td>25</td>
+                <td>00:00</td>
+                <td>€33.19</td>
+                <td>€0.0332</td>
+                <td>3.32</td>
+            </tr>
+        
+            <tr>
+                <td>26</td>
+                <td>01:00</td>
+                <td>€59.20</td>
+                <td>€0.0592</td>
+                <td>5.92</td>
+            </tr>
+        
+            <tr>
+                <td>27</td>
+                <td>02:00</td>
+                <td>€62.63</td>
+                <td>€0.0626</td>
+                <td>6.26</td>
+            </tr>
+        
+            <tr>
+                <td>28</td>
+                <td>03:00</td>
+                <td>€75.81</td>
+                <td>€0.0758</td>
+                <td>7.58</td>
+            </tr>
+        
+            <tr>
+                <td>29</td>
+                <td>04:00</td>
+                <td>€64.17</td>
+                <td>€0.0642</td>
+                <td>6.42</td>
+            </tr>
+        
+            <tr>
+                <td>30</td>
+                <td>05:00</td>
+                <td>€79.36</td>
+                <td>€0.0794</td>
+                <td>7.94</td>
+            </tr>
+        
+            <tr>
+                <td>31</td>
+                <td>06:00</td>
+                <td>€82.57</td>
+                <td>€0.0826</td>
+                <td>8.26</td>
+            </tr>
+        
+            <tr>
+                <td>32</td>
+                <td>07:00</td>
+                <td>€84.61</td>
+                <td>€0.0846</td>
+                <td>8.46</td>
+            </tr>
+        
+            <tr>
+                <td>33</td>
+                <td>08:00</td>
+                <td>€88.83</td>
+                <td>€0.0888</td>
+                <td>8.88</td>
+            </tr>
+        
+            <tr>
+                <td>34</td>
+                <td>09:00</td>
+                <td>€90.72</td>
+                <td>€0.0907</td>
+                <td>9.07</td>
+            </tr>
+        
+            <tr>
+                <td>35</td>
+                <td>10:00</td>
+                <td>€94.93</td>
+                <td>€0.0949</td>
+                <td>9.49</td>
+            </tr>
+        
+            <tr>
+                <td>36</td>
+                <td>11:00</td>
+                <td>€89.29</td>
+                <td>€0.0893</td>
+                <td>8.93</td>
+            </tr>
+        
+            <tr>
+                <td>37</td>
+                <td>12:00</td>
+                <td>€98.49</td>
+                <td>€0.0985</td>
+                <td>9.85</td>
+            </tr>
+        
+            <tr>
+                <td>38</td>
+                <td>13:00</td>
+                <td>€92.96</td>
+                <td>€0.0930</td>
+                <td>9.30</td>
+            </tr>
+        
+            <tr>
+                <td>39</td>
+                <td>14:00</td>
+                <td>€83.63</td>
+                <td>€0.0836</td>
+                <td>8.36</td>
+            </tr>
+        
+            <tr>
+                <td>40</td>
+                <td>15:00</td>
+                <td>€73.89</td>
+                <td>€0.0739</td>
+                <td>7.39</td>
+            </tr>
+        
+            <tr>
+                <td>41</td>
+                <td>16:00</td>
+                <td>€85.76</td>
+                <td>€0.0858</td>
+                <td>8.58</td>
+            </tr>
+        
+            <tr>
+                <td>42</td>
+                <td>17:00</td>
+                <td>€76.93</td>
+                <td>€0.0769</td>
+                <td>7.69</td>
+            </tr>
+        
+            <tr>
+                <td>43</td>
+                <td>18:00</td>
+                <td>€73.71</td>
+                <td>€0.0737</td>
+                <td>7.37</td>
+            </tr>
+        
+            <tr>
+                <td>44</td>
+                <td>19:00</td>
+                <td>€69.77</td>
+                <td>€0.0698</td>
+                <td>6.98</td>
+            </tr>
+        
+            <tr>
+                <td>45</td>
+                <td>20:00</td>
+                <td>€71.71</td>
+                <td>€0.0717</td>
+                <td>7.17</td>
+            </tr>
+        
+            <tr>
+                <td>46</td>
+                <td>21:00</td>
+                <td>€68.56</td>
+                <td>€0.0686</td>
+                <td>6.86</td>
+            </tr>
+        
+            <tr>
+                <td>47</td>
+                <td>22:00</td>
+                <td>€69.24</td>
+                <td>€0.0692</td>
+                <td>6.92</td>
+            </tr>
+        
+            <tr>
+                <td>48</td>
+                <td>23:00</td>
+                <td>€70.08</td>
+                <td>€0.0701</td>
+                <td>7.01</td>
+            </tr>
+        
+            <tr>
+                <td>49</td>
+                <td>00:00</td>
+                <td>€67.42</td>
+                <td>€0.0674</td>
+                <td>6.74</td>
+            </tr>
+        
+            <tr>
+                <td>50</td>
+                <td>01:00</td>
+                <td>€67.24</td>
+                <td>€0.0672</td>
+                <td>6.72</td>
+            </tr>
+        
+            <tr>
+                <td>51</td>
+                <td>02:00</td>
+                <td>€68.88</td>
+                <td>€0.0689</td>
+                <td>6.89</td>
+            </tr>
+        
+            <tr>
+                <td>52</td>
+                <td>03:00</td>
+                <td>€72.80</td>
+                <td>€0.0728</td>
+                <td>7.28</td>
+            </tr>
+        
+            <tr>
+                <td>53</td>
+                <td>04:00</td>
+                <td>€71.44</td>
+                <td>€0.0714</td>
+                <td>7.14</td>
+            </tr>
+        
+            <tr>
+                <td>54</td>
+                <td>05:00</td>
+                <td>€74.64</td>
+                <td>€0.0746</td>
+                <td>7.46</td>
+            </tr>
+        
+            <tr>
+                <td>55</td>
+                <td>06:00</td>
+                <td>€74.42</td>
+                <td>€0.0744</td>
+                <td>7.44</td>
+            </tr>
+        
+            <tr>
+                <td>56</td>
+                <td>07:00</td>
+                <td>€75.00</td>
+                <td>€0.0750</td>
+                <td>7.50</td>
+            </tr>
+        
+            <tr>
+                <td>57</td>
+                <td>08:00</td>
+                <td>€67.90</td>
+                <td>€0.0679</td>
+                <td>6.79</td>
+            </tr>
+        
+            <tr>
+                <td>58</td>
+                <td>09:00</td>
+                <td>€78.82</td>
+                <td>€0.0788</td>
+                <td>7.88</td>
+            </tr>
+        
+            <tr>
+                <td>59</td>
+                <td>10:00</td>
+                <td>€86.69</td>
+                <td>€0.0867</td>
+                <td>8.67</td>
+            </tr>
+        
+            <tr>
+                <td>60</td>
+                <td>11:00</td>
+                <td>€85.48</td>
+                <td>€0.0855</td>
+                <td>8.55</td>
+            </tr>
+        
+            <tr>
+                <td>61</td>
+                <td>12:00</td>
+                <td>€84.42</td>
+                <td>€0.0844</td>
+                <td>8.44</td>
+            </tr>
+        
+            <tr>
+                <td>62</td>
+                <td>13:00</td>
+                <td>€79.29</td>
+                <td>€0.0793</td>
+                <td>7.93</td>
+            </tr>
+        
+            <tr>
+                <td>63</td>
+                <td>14:00</td>
+                <td>€83.46</td>
+                <td>€0.0835</td>
+                <td>8.35</td>
+            </tr>
+        
+            <tr>
+                <td>64</td>
+                <td>15:00</td>
+                <td>€85.97</td>
+                <td>€0.0860</td>
+                <td>8.60</td>
+            </tr>
+        
+            <tr>
+                <td>65</td>
+                <td>16:00</td>
+                <td>€83.07</td>
+                <td>€0.0831</td>
+                <td>8.31</td>
+            </tr>
+        
+            <tr>
+                <td>66</td>
+                <td>17:00</td>
+                <td>€91.81</td>
+                <td>€0.0918</td>
+                <td>9.18</td>
+            </tr>
+        
+            <tr>
+                <td>67</td>
+                <td>18:00</td>
+                <td>€92.30</td>
+                <td>€0.0923</td>
+                <td>9.23</td>
+            </tr>
+        
+            <tr>
+                <td>68</td>
+                <td>19:00</td>
+                <td>€91.86</td>
+                <td>€0.0919</td>
+                <td>9.19</td>
+            </tr>
+        
+            <tr>
+                <td>69</td>
+                <td>20:00</td>
+                <td>€90.23</td>
+                <td>€0.0902</td>
+                <td>9.02</td>
+            </tr>
+        
+            <tr>
+                <td>70</td>
+                <td>21:00</td>
+                <td>€94.84</td>
+                <td>€0.0948</td>
+                <td>9.48</td>
+            </tr>
+        
+            <tr>
+                <td>71</td>
+                <td>22:00</td>
+                <td>€99.86</td>
+                <td>€0.0999</td>
+                <td>9.99</td>
+            </tr>
+        
+            <tr class="highest">
+                <td>72</td>
+                <td>23:00</td>
+                <td>€105.73</td>
+                <td>€0.1057</td>
+                <td>10.57</td>
+            </tr>
+        
+            <tr>
+                <td>73</td>
+                <td>00:00</td>
+                <td>€96.99</td>
+                <td>€0.0970</td>
+                <td>9.70</td>
+            </tr>
+        
+            <tr>
+                <td>74</td>
+                <td>01:00</td>
+                <td>€94.86</td>
+                <td>€0.0949</td>
+                <td>9.49</td>
+            </tr>
+        
+            <tr>
+                <td>75</td>
+                <td>02:00</td>
+                <td>€100.10</td>
+                <td>€0.1001</td>
+                <td>10.01</td>
+            </tr>
+        
+            <tr>
+                <td>76</td>
+                <td>03:00</td>
+                <td>€95.93</td>
+                <td>€0.0959</td>
+                <td>9.59</td>
+            </tr>
+        
+            <tr>
+                <td>77</td>
+                <td>04:00</td>
+                <td>€98.61</td>
+                <td>€0.0986</td>
+                <td>9.86</td>
+            </tr>
+        
+            <tr>
+                <td>78</td>
+                <td>05:00</td>
+                <td>€95.53</td>
+                <td>€0.0955</td>
+                <td>9.55</td>
+            </tr>
+        
+            <tr>
+                <td>79</td>
+                <td>06:00</td>
+                <td>€93.94</td>
+                <td>€0.0939</td>
+                <td>9.39</td>
+            </tr>
+        
+            <tr>
+                <td>80</td>
+                <td>07:00</td>
+                <td>€91.03</td>
+                <td>€0.0910</td>
+                <td>9.10</td>
+            </tr>
+        
+            <tr>
+                <td>81</td>
+                <td>08:00</td>
+                <td>€95.57</td>
+                <td>€0.0956</td>
+                <td>9.56</td>
+            </tr>
+        
+            <tr>
+                <td>82</td>
+                <td>09:00</td>
+                <td>€89.88</td>
+                <td>€0.0899</td>
+                <td>8.99</td>
+            </tr>
+        
+            <tr>
+                <td>83</td>
+                <td>10:00</td>
+                <td>€78.33</td>
+                <td>€0.0783</td>
+                <td>7.83</td>
+            </tr>
+        
+            <tr>
+                <td>84</td>
+                <td>11:00</td>
+                <td>€66.63</td>
+                <td>€0.0666</td>
+                <td>6.66</td>
+            </tr>
+        
+            <tr>
+                <td>85</td>
+                <td>12:00</td>
+                <td>€82.82</td>
+                <td>€0.0828</td>
+                <td>8.28</td>
+            </tr>
+        
+            <tr>
+                <td>86</td>
+                <td>13:00</td>
+                <td>€80.21</td>
+                <td>€0.0802</td>
+                <td>8.02</td>
+            </tr>
+        
+            <tr>
+                <td>87</td>
+                <td>14:00</td>
+                <td>€76.72</td>
+                <td>€0.0767</td>
+                <td>7.67</td>
+            </tr>
+        
+            <tr>
+                <td>88</td>
+                <td>15:00</td>
+                <td>€62.34</td>
+                <td>€0.0623</td>
+                <td>6.23</td>
+            </tr>
+        
+            <tr>
+                <td>89</td>
+                <td>16:00</td>
+                <td>€85.73</td>
+                <td>€0.0857</td>
+                <td>8.57</td>
+            </tr>
+        
+            <tr>
+                <td>90</td>
+                <td>17:00</td>
+                <td>€79.91</td>
+                <td>€0.0799</td>
+                <td>7.99</td>
+            </tr>
+        
+            <tr>
+                <td>91</td>
+                <td>18:00</td>
+                <td>€71.10</td>
+                <td>€0.0711</td>
+                <td>7.11</td>
+            </tr>
+        
+            <tr>
+                <td>92</td>
+                <td>19:00</td>
+                <td>€61.96</td>
+                <td>€0.0620</td>
+                <td>6.20</td>
+            </tr>
+        
+            <tr>
+                <td>93</td>
+                <td>20:00</td>
+                <td>€77.81</td>
+                <td>€0.0778</td>
+                <td>7.78</td>
+            </tr>
+        
+            <tr>
+                <td>94</td>
+                <td>21:00</td>
+                <td>€68.68</td>
+                <td>€0.0687</td>
+                <td>6.87</td>
+            </tr>
+        
+            <tr>
+                <td>95</td>
+                <td>22:00</td>
+                <td>€69.43</td>
+                <td>€0.0694</td>
+                <td>6.94</td>
+            </tr>
+        
+            <tr>
+                <td>96</td>
+                <td>23:00</td>
+                <td>€60.03</td>
+                <td>€0.0600</td>
+                <td>6.00</td>
+            </tr>
+        
+        </tbody>
+    </table>
+    
+        
+        <div class="footer">
+            <p>Data updated: 08/12/2025 om 10:37 • Source: ENTSO-E Transparency Platform</p>
+            <p><a href="https://github.com/dsoubry/machinery" style="color: #3498db;">GitHub Repository</a> | 
+               <a href="https://transparency.entsoe.eu/" style="color: #3498db;">ENTSO-E Platform</a></p>
         </div>
-    </footer>
+    </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Chart.js configuration
+        // Simple chart
         const ctx = document.getElementById('priceChart').getContext('2d');
-        const priceData = [18.73, 23.74, 17.58, 10.49, 13.69, 13.78, 10.7, 8.47, 15.4, 11.72, 8.99, 8.08, 7.81, 7.26, 7.0, 7.82, 9.14, 12.82, 21.62, 13.51, 15.62, 29.82, 41.91, 33.19, 59.2, 62.63, 75.81, 64.17, 79.36, 82.57, 84.61, 88.83, 90.72, 94.93, 89.29, 98.49, 92.96, 83.63, 73.89, 85.76, 76.93, 73.71, 69.77, 71.71, 68.56, 69.24, 70.08, 67.42, 67.24, 68.88, 72.8, 71.44, 74.64, 74.42, 75.0, 67.9, 78.82, 86.69, 85.48, 84.42, 79.29, 83.46, 85.97, 83.07, 91.81, 92.3, 91.86, 90.23, 94.84, 99.86, 105.73, 96.99, 94.86, 100.1, 95.93, 98.61, 95.53, 93.94, 91.03, 95.57, 89.88, 78.33, 66.63, 82.82, 80.21, 76.72, 62.34, 85.73, 79.91, 71.1, 61.96, 77.81, 68.68, 69.43, 60.03];
-        const hourLabels = ["01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00", "24:00", "25:00", "26:00", "27:00", "28:00", "29:00", "30:00", "31:00", "32:00", "33:00", "34:00", "35:00", "36:00", "37:00", "38:00", "39:00", "40:00", "41:00", "42:00", "43:00", "44:00", "45:00", "46:00", "47:00", "48:00", "49:00", "50:00", "51:00", "52:00", "53:00", "54:00", "55:00", "56:00", "57:00", "58:00", "59:00", "60:00", "61:00", "62:00", "63:00", "64:00", "65:00", "66:00", "67:00", "68:00", "69:00", "70:00", "71:00", "72:00", "73:00", "74:00", "75:00", "76:00", "77:00", "78:00", "79:00", "80:00", "81:00", "82:00", "83:00", "84:00", "85:00", "86:00", "87:00", "88:00", "89:00", "90:00", "91:00", "92:00", "93:00", "94:00", "95:00", "96:00"];
         
         new Chart(ctx, {
             type: 'line',
             data: {
-                labels: hourLabels,
+                labels: ["01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00", "24:00", "25:00", "26:00", "27:00", "28:00", "29:00", "30:00", "31:00", "32:00", "33:00", "34:00", "35:00", "36:00", "37:00", "38:00", "39:00", "40:00", "41:00", "42:00", "43:00", "44:00", "45:00", "46:00", "47:00", "48:00", "49:00", "50:00", "51:00", "52:00", "53:00", "54:00", "55:00", "56:00", "57:00", "58:00", "59:00", "60:00", "61:00", "62:00", "63:00", "64:00", "65:00", "66:00", "67:00", "68:00", "69:00", "70:00", "71:00", "72:00", "73:00", "74:00", "75:00", "76:00", "77:00", "78:00", "79:00", "80:00", "81:00", "82:00", "83:00", "84:00", "85:00", "86:00", "87:00", "88:00", "89:00", "90:00", "91:00", "92:00", "93:00", "94:00", "95:00", "96:00"],
                 datasets: [{
-                    label: 'Prijs (€/MWh)',
-                    data: priceData,
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    label: 'Price (€/MWh)',
+                    data: [18.73, 23.74, 17.58, 10.49, 13.69, 13.78, 10.7, 8.47, 15.4, 11.72, 8.99, 8.08, 7.81, 7.26, 7.0, 7.82, 9.14, 12.82, 21.62, 13.51, 15.62, 29.82, 41.91, 33.19, 59.2, 62.63, 75.81, 64.17, 79.36, 82.57, 84.61, 88.83, 90.72, 94.93, 89.29, 98.49, 92.96, 83.63, 73.89, 85.76, 76.93, 73.71, 69.77, 71.71, 68.56, 69.24, 70.08, 67.42, 67.24, 68.88, 72.8, 71.44, 74.64, 74.42, 75.0, 67.9, 78.82, 86.69, 85.48, 84.42, 79.29, 83.46, 85.97, 83.07, 91.81, 92.3, 91.86, 90.23, 94.84, 99.86, 105.73, 96.99, 94.86, 100.1, 95.93, 98.61, 95.53, 93.94, 91.03, 95.57, 89.88, 78.33, 66.63, 82.82, 80.21, 76.72, 62.34, 85.73, 79.91, 71.1, 61.96, 77.81, 68.68, 69.43, 60.03],
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
                     borderWidth: 2,
                     fill: true,
                     tension: 0.1
@@ -1013,11 +995,8 @@
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
-                    title: {
-                        display: true,
-                        text: 'Uurlijkse Elektriciteitsprijzen'
-                    },
                     legend: {
                         display: false
                     }
@@ -1026,14 +1005,14 @@
                     y: {
                         title: {
                             display: true,
-                            text: 'Prijs (€/MWh)'
+                            text: 'Price (€/MWh)'
                         },
                         beginAtZero: false
                     },
                     x: {
                         title: {
                             display: true,
-                            text: 'Tijdstip'
+                            text: 'Hour'
                         }
                     }
                 }
