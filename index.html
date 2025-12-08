@@ -23,7 +23,7 @@
     }
 
     .card {
-      max-width: 1000px;
+      max-width: 1200px;
       margin: 0 auto;
       background: rgba(15, 23, 42, 0.9);
       border-radius: 1rem;
@@ -32,8 +32,45 @@
       border: 1px solid rgba(148, 163, 184, 0.5);
     }
 
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #1f2937;
+    }
+
+    .tab {
+      padding: 0.75rem 1.5rem;
+      background: rgba(31, 41, 55, 0.5);
+      border: 1px solid rgba(75, 85, 99, 0.5);
+      border-bottom: none;
+      border-radius: 0.5rem 0.5rem 0 0;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: #9ca3af;
+    }
+
+    .tab:hover {
+      background: rgba(34, 197, 94, 0.1);
+      color: #bbf7d0;
+    }
+
+    .tab.active {
+      background: rgba(34, 197, 94, 0.2);
+      border-color: rgba(34, 197, 94, 0.5);
+      color: #bbf7d0;
+      font-weight: bold;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
     .results {
-      margin-top: 1.5rem;
       display: grid;
       grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
       gap: 1.5rem;
@@ -42,6 +79,14 @@
     @media (max-width: 800px) {
       .results {
         grid-template-columns: 1fr;
+      }
+      
+      .tabs {
+        flex-direction: column;
+      }
+      
+      .tab {
+        text-align: center;
       }
     }
 
@@ -128,6 +173,42 @@
       transition: width 0.3s ease;
     }
 
+    .note {
+      margin-top: 0.75rem;
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    .small {
+      font-size: 0.75rem;
+    }
+
+    .status-box {
+      margin-top: 0.75rem;
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    .tips {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      border-radius: 1rem;
+    }
+
+    .tips h3 {
+      margin-top: 0;
+      font-size: 1rem;
+      color: #bbf7d0;
+    }
+
+    .tips p {
+      margin: 0.25rem 0;
+      font-size: 0.85rem;
+      color: #d1fae5;
+    }
+
     /* Mobile responsive table */
     @media (max-width: 600px) {
       table, thead, tbody, th, td, tr {
@@ -197,42 +278,6 @@
         margin-top: 0.25rem;
       }
     }
-
-    .note {
-      margin-top: 0.75rem;
-      font-size: 0.8rem;
-      color: #9ca3af;
-    }
-
-    .small {
-      font-size: 0.75rem;
-    }
-
-    .status-box {
-      margin-top: 0.75rem;
-      font-size: 0.8rem;
-      color: #9ca3af;
-    }
-
-    .tips {
-      margin-top: 1rem;
-      padding: 1rem;
-      background: rgba(34, 197, 94, 0.1);
-      border: 1px solid rgba(34, 197, 94, 0.3);
-      border-radius: 1rem;
-    }
-
-    .tips h3 {
-      margin-top: 0;
-      font-size: 1rem;
-      color: #bbf7d0;
-    }
-
-    .tips p {
-      margin: 0.25rem 0;
-      font-size: 0.85rem;
-      color: #d1fae5;
-    }
   </style>
 </head>
 <body>
@@ -244,43 +289,618 @@
     </p>
 
     <div class="status-box">
-      Laatste update: 08/12/2025 om 16:46 • Data voor: Onbekend
+      Laatste update: 08/12/2025 om 16:47 • 2 dag(en) beschikbaar
     </div>
 
-    <div class="results">
-      <div>
-        <div class="summary">
-          <h2>Prijsoverzicht</h2>
-          <p><strong>Gemiddelde prijs:</strong> €0.00/MWh</p>
-          <p><strong>Laagste prijs:</strong> €0.00/MWh (uur 00)</p>
-          <p><strong>Hoogste prijs:</strong> €0.00/MWh (uur 00)</p>
-          <p><strong>Datapunten:</strong> 0 uurprijzen</p>
+    <div class="tabs">
+  <div class="tab" id="tab-today" onclick="showDay('today')">Vandaag</div>
+  <div class="tab" id="tab-tomorrow" onclick="showDay('tomorrow')">Morgen</div>
+</div>
+
+    
+    
+    <div class="tab-content" id="content-today">
+      <div class="results">
+        <div>
+          <div class="summary">
+            <h2>Prijsoverzicht - maandag 08 december 2025</h2>
+            <p><strong>Gemiddelde prijs:</strong> €63.86/MWh</p>
+            <p><strong>Laagste prijs:</strong> €7.36/MWh (uur 04)</p>
+            <p><strong>Hoogste prijs:</strong> €97.67/MWh (uur 18)</p>
+            <p><strong>Datapunten:</strong> 24 uurprijzen</p>
+          </div>
+
+          <div class="tips">
+            <h3>🏠 Beste tijden voor huishoudtoestellen</h3>
+            <p><strong>🔌 Korte toestellen (1u):</strong> 03:00 - €7.36/MWh</p><p><strong>🧺 Wasmachine (2u):</strong> 02:00-03:00 - €9.20/MWh</p><p><strong>🍽️ Vaatwas (3u):</strong> 01:00-03:00 - €10.02/MWh</p><p><strong>👕 Droogkast (4u):</strong> 01:00-04:00 - €10.73/MWh</p><p class="note">💡 Plan je apparaten om te starten aan het begin van deze tijdsblokken</p>
+          </div>
         </div>
 
-        <div class="tips">
-          <h3>🏠 Beste tijden voor huishoudtoestellen</h3>
-          <p>Geen blokgegevens beschikbaar</p>
-        </div>
-      </div>
-
-      <div>
-        <table>
-          <thead>
+        <div>
+          <table>
+            <thead>
+              <tr>
+                <th>Uurblok</th>
+                <th>Prijs (€/MWh)</th>
+                <th>Prijs (ct/kWh)</th>
+                <th class="bar-cell">Relatief niveau</th>
+              </tr>
+            </thead>
+            <tbody>
             <tr>
-              <th>Uurblok</th>
-              <th>Prijs (€/MWh)</th>
-              <th>Prijs (ct/kWh)</th>
-              <th class="bar-cell">Relatief niveau</th>
+                <td data-label="Uurblok">00.00u – 01.00u</td>
+                <td data-label="Prijs (€/MWh)">17.63 €</td>
+                <td data-label="Prijs (ct/kWh)">1.76 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 18.1%"></div>
+                    </div>
+                </td>
             </tr>
-          </thead>
-          <tbody><tr><td colspan="4">Geen prijsdata beschikbaar</td></tr></tbody>
-        </table>
-        <div class="note">
-          Balkjes tonen de relatieve prijs t.o.v. de duurste uurprijs van de dag.
-          ★ = Laagste prijs van de dag.
+        
+            <tr>
+                <td data-label="Uurblok">01.00u – 02.00u</td>
+                <td data-label="Prijs (€/MWh)">11.66 €</td>
+                <td data-label="Prijs (ct/kWh)">1.17 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 11.9%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">02.00u – 03.00u</td>
+                <td data-label="Prijs (€/MWh)">11.05 €</td>
+                <td data-label="Prijs (ct/kWh)">1.10 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 11.3%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr class="best-single-hour">
+                <td data-label="Uurblok">03.00u – 04.00u</td>
+                <td data-label="Prijs (€/MWh)">7.36 €</td>
+                <td data-label="Prijs (ct/kWh)">0.74 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 7.5%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">04.00u – 05.00u</td>
+                <td data-label="Prijs (€/MWh)">12.85 €</td>
+                <td data-label="Prijs (ct/kWh)">1.29 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 13.2%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">05.00u – 06.00u</td>
+                <td data-label="Prijs (€/MWh)">25.21 €</td>
+                <td data-label="Prijs (ct/kWh)">2.52 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 25.8%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">06.00u – 07.00u</td>
+                <td data-label="Prijs (€/MWh)">57.71 €</td>
+                <td data-label="Prijs (ct/kWh)">5.77 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 59.1%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">07.00u – 08.00u</td>
+                <td data-label="Prijs (€/MWh)">77.68 €</td>
+                <td data-label="Prijs (ct/kWh)">7.77 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 79.5%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">08.00u – 09.00u</td>
+                <td data-label="Prijs (€/MWh)">90.94 €</td>
+                <td data-label="Prijs (ct/kWh)">9.09 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 93.1%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">09.00u – 10.00u</td>
+                <td data-label="Prijs (€/MWh)">87.24 €</td>
+                <td data-label="Prijs (ct/kWh)">8.72 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 89.3%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">10.00u – 11.00u</td>
+                <td data-label="Prijs (€/MWh)">76.54 €</td>
+                <td data-label="Prijs (ct/kWh)">7.65 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 78.4%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">11.00u – 12.00u</td>
+                <td data-label="Prijs (€/MWh)">69.90 €</td>
+                <td data-label="Prijs (ct/kWh)">6.99 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 71.6%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">12.00u – 13.00u</td>
+                <td data-label="Prijs (€/MWh)">69.08 €</td>
+                <td data-label="Prijs (ct/kWh)">6.91 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 70.7%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">13.00u – 14.00u</td>
+                <td data-label="Prijs (€/MWh)">73.88 €</td>
+                <td data-label="Prijs (ct/kWh)">7.39 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 75.6%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">14.00u – 15.00u</td>
+                <td data-label="Prijs (€/MWh)">79.72 €</td>
+                <td data-label="Prijs (ct/kWh)">7.97 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 81.6%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">15.00u – 16.00u</td>
+                <td data-label="Prijs (€/MWh)">83.28 €</td>
+                <td data-label="Prijs (ct/kWh)">8.33 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 85.3%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">16.00u – 17.00u</td>
+                <td data-label="Prijs (€/MWh)">89.76 €</td>
+                <td data-label="Prijs (ct/kWh)">8.98 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 91.9%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">17.00u – 18.00u</td>
+                <td data-label="Prijs (€/MWh)">97.67 €</td>
+                <td data-label="Prijs (ct/kWh)">9.77 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 100.0%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">18.00u – 19.00u</td>
+                <td data-label="Prijs (€/MWh)">96.97 €</td>
+                <td data-label="Prijs (ct/kWh)">9.70 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 99.3%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">19.00u – 20.00u</td>
+                <td data-label="Prijs (€/MWh)">94.78 €</td>
+                <td data-label="Prijs (ct/kWh)">9.48 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 97.0%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">20.00u – 21.00u</td>
+                <td data-label="Prijs (€/MWh)">82.60 €</td>
+                <td data-label="Prijs (ct/kWh)">8.26 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 84.6%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">21.00u – 22.00u</td>
+                <td data-label="Prijs (€/MWh)">75.52 €</td>
+                <td data-label="Prijs (ct/kWh)">7.55 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 77.3%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">22.00u – 23.00u</td>
+                <td data-label="Prijs (€/MWh)">74.67 €</td>
+                <td data-label="Prijs (ct/kWh)">7.47 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 76.5%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">23.00u – 00.00u</td>
+                <td data-label="Prijs (€/MWh)">68.99 €</td>
+                <td data-label="Prijs (ct/kWh)">6.90 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 70.6%"></div>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+          </table>
+          <div class="note">
+            Balkjes tonen de relatieve prijs t.o.v. de duurste uurprijs van de dag.
+            ★ = Laagste prijs van de dag.
+          </div>
         </div>
       </div>
     </div>
+    
+    <div class="tab-content" id="content-tomorrow">
+      <div class="results">
+        <div>
+          <div class="summary">
+            <h2>Prijsoverzicht - dinsdag 09 december 2025</h2>
+            <p><strong>Gemiddelde prijs:</strong> €77.31/MWh</p>
+            <p><strong>Laagste prijs:</strong> €44.74/MWh (uur 24)</p>
+            <p><strong>Hoogste prijs:</strong> €104.63/MWh (uur 09)</p>
+            <p><strong>Datapunten:</strong> 24 uurprijzen</p>
+          </div>
+
+          <div class="tips">
+            <h3>🏠 Beste tijden voor huishoudtoestellen</h3>
+            <p><strong>🔌 Korte toestellen (1u):</strong> 23:00 - €44.74/MWh</p><p><strong>🧺 Wasmachine (2u):</strong> 22:00-23:00 - €51.93/MWh</p><p><strong>🍽️ Vaatwas (3u):</strong> 21:00-23:00 - €55.76/MWh</p><p><strong>👕 Droogkast (4u):</strong> 20:00-23:00 - €60.73/MWh</p><p class="note">💡 Plan je apparaten om te starten aan het begin van deze tijdsblokken</p>
+          </div>
+        </div>
+
+        <div>
+          <table>
+            <thead>
+              <tr>
+                <th>Uurblok</th>
+                <th>Prijs (€/MWh)</th>
+                <th>Prijs (ct/kWh)</th>
+                <th class="bar-cell">Relatief niveau</th>
+              </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td data-label="Uurblok">00.00u – 01.00u</td>
+                <td data-label="Prijs (€/MWh)">64.55 €</td>
+                <td data-label="Prijs (ct/kWh)">6.45 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 61.7%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">01.00u – 02.00u</td>
+                <td data-label="Prijs (€/MWh)">63.50 €</td>
+                <td data-label="Prijs (ct/kWh)">6.35 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 60.7%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">02.00u – 03.00u</td>
+                <td data-label="Prijs (€/MWh)">63.49 €</td>
+                <td data-label="Prijs (ct/kWh)">6.35 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 60.7%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">03.00u – 04.00u</td>
+                <td data-label="Prijs (€/MWh)">61.22 €</td>
+                <td data-label="Prijs (ct/kWh)">6.12 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 58.5%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">04.00u – 05.00u</td>
+                <td data-label="Prijs (€/MWh)">57.88 €</td>
+                <td data-label="Prijs (ct/kWh)">5.79 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 55.3%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">05.00u – 06.00u</td>
+                <td data-label="Prijs (€/MWh)">65.87 €</td>
+                <td data-label="Prijs (ct/kWh)">6.59 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 63.0%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">06.00u – 07.00u</td>
+                <td data-label="Prijs (€/MWh)">79.78 €</td>
+                <td data-label="Prijs (ct/kWh)">7.98 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 76.2%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">07.00u – 08.00u</td>
+                <td data-label="Prijs (€/MWh)">90.24 €</td>
+                <td data-label="Prijs (ct/kWh)">9.02 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 86.2%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">08.00u – 09.00u</td>
+                <td data-label="Prijs (€/MWh)">104.63 €</td>
+                <td data-label="Prijs (ct/kWh)">10.46 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 100.0%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">09.00u – 10.00u</td>
+                <td data-label="Prijs (€/MWh)">99.64 €</td>
+                <td data-label="Prijs (ct/kWh)">9.96 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 95.2%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">10.00u – 11.00u</td>
+                <td data-label="Prijs (€/MWh)">87.48 €</td>
+                <td data-label="Prijs (ct/kWh)">8.75 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 83.6%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">11.00u – 12.00u</td>
+                <td data-label="Prijs (€/MWh)">82.25 €</td>
+                <td data-label="Prijs (ct/kWh)">8.22 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 78.6%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">12.00u – 13.00u</td>
+                <td data-label="Prijs (€/MWh)">78.64 €</td>
+                <td data-label="Prijs (ct/kWh)">7.86 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 75.2%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">13.00u – 14.00u</td>
+                <td data-label="Prijs (€/MWh)">80.42 €</td>
+                <td data-label="Prijs (ct/kWh)">8.04 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 76.9%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">14.00u – 15.00u</td>
+                <td data-label="Prijs (€/MWh)">79.83 €</td>
+                <td data-label="Prijs (ct/kWh)">7.98 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 76.3%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">15.00u – 16.00u</td>
+                <td data-label="Prijs (€/MWh)">89.97 €</td>
+                <td data-label="Prijs (ct/kWh)">9.00 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 86.0%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">16.00u – 17.00u</td>
+                <td data-label="Prijs (€/MWh)">96.23 €</td>
+                <td data-label="Prijs (ct/kWh)">9.62 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 92.0%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">17.00u – 18.00u</td>
+                <td data-label="Prijs (€/MWh)">93.06 €</td>
+                <td data-label="Prijs (ct/kWh)">9.31 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 88.9%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">18.00u – 19.00u</td>
+                <td data-label="Prijs (€/MWh)">92.69 €</td>
+                <td data-label="Prijs (ct/kWh)">9.27 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 88.6%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">19.00u – 20.00u</td>
+                <td data-label="Prijs (€/MWh)">81.19 €</td>
+                <td data-label="Prijs (ct/kWh)">8.12 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 77.6%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">20.00u – 21.00u</td>
+                <td data-label="Prijs (€/MWh)">75.62 €</td>
+                <td data-label="Prijs (ct/kWh)">7.56 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 72.3%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">21.00u – 22.00u</td>
+                <td data-label="Prijs (€/MWh)">63.44 €</td>
+                <td data-label="Prijs (ct/kWh)">6.34 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 60.6%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr>
+                <td data-label="Uurblok">22.00u – 23.00u</td>
+                <td data-label="Prijs (€/MWh)">59.11 €</td>
+                <td data-label="Prijs (ct/kWh)">5.91 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 56.5%"></div>
+                    </div>
+                </td>
+            </tr>
+        
+            <tr class="best-single-hour">
+                <td data-label="Uurblok">23.00u – 00.00u</td>
+                <td data-label="Prijs (€/MWh)">44.74 €</td>
+                <td data-label="Prijs (ct/kWh)">4.47 ct/kWh</td>
+                <td data-label="Niveau" class="bar-cell">
+                    <div class="bar-wrapper">
+                        <div class="bar" style="width: 42.8%"></div>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+          </table>
+          <div class="note">
+            Balkjes tonen de relatieve prijs t.o.v. de duurste uurprijs van de dag.
+            ★ = Laagste prijs van de dag.
+          </div>
+        </div>
+      </div>
+    </div>
+    
 
     <div class="note" style="text-align: center; margin-top: 2rem; border-top: 1px solid #1f2937; padding-top: 1rem;">
       Data: ENTSO-E Transparency Platform • 
@@ -288,5 +908,31 @@
       <a href="https://transparency.entsoe.eu/" style="color: #22c55e;">ENTSO-E</a>
     </div>
   </div>
+
+  <script>
+    function showDay(dayKey) {
+      // Hide all tab contents
+      document.querySelectorAll('.tab-content').forEach(el => {
+        el.classList.remove('active');
+      });
+      
+      // Hide all tabs
+      document.querySelectorAll('.tab').forEach(el => {
+        el.classList.remove('active');
+      });
+      
+      // Show selected tab and content
+      document.getElementById('tab-' + dayKey).classList.add('active');
+      document.getElementById('content-' + dayKey).classList.add('active');
+    }
+    
+    // Show first tab by default
+    document.addEventListener('DOMContentLoaded', function() {
+      const firstTab = document.querySelector('.tab');
+      if (firstTab) {
+        firstTab.click();
+      }
+    });
+  </script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 {
   "metadata": {
     "source": "ENTSO-E Transparency Platform",
-    "retrieved_at": "2025-12-08T16:46:55.269838",
+    "retrieved_at": "2025-12-08T16:47:24.449764",
     "timezone": "Europe/Brussels",
     "available_days": 2,
     "primary_date": "2025-12-08"
@@ -11,7 +11,7 @@
       "metadata": {
         "source": "ENTSO-E Transparency Platform",
         "date": "2025-12-08",
-        "retrieved_at": "2025-12-08T16:46:53.981740",
+        "retrieved_at": "2025-12-08T16:47:20.934879",
         "timezone": "Europe/Brussels",
         "data_points": 24,
         "resolution": "PT60M",
@@ -230,7 +230,7 @@
       "metadata": {
         "source": "ENTSO-E Transparency Platform",
         "date": "2025-12-09",
-        "retrieved_at": "2025-12-08T16:46:55.268621",
+        "retrieved_at": "2025-12-08T16:47:24.448573",
         "timezone": "Europe/Brussels",
         "data_points": 24,
         "resolution": "PT60M",
