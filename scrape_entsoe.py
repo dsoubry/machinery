@@ -77,20 +77,33 @@ def fetch_day_ahead_prices(target_date=None):
     """Fetch day-ahead prices from ENTSO-E with improved data validation"""
     token = get_entsoe_token()
     
-    # Default to today's prices (more likely to be available and accurate)
+    # Default to today's prices (Belgian local time)
     if target_date is None:
-        target_date = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        # Get today in Belgian timezone
+        belgian_tz = timezone(timedelta(hours=1))  # CET (UTC+1)
+        target_date = datetime.now(belgian_tz).replace(hour=0, minute=0, second=0, microsecond=0)
     
-    # ENTSO-E uses UTC timestamps
-    start_time = target_date.replace(tzinfo=timezone.utc)
-    end_time = start_time + timedelta(days=1)
+    # Convert target date to UTC for ENTSO-E API
+    # For Belgian date 2025-12-08 00:00 CET, we need UTC period:
+    # - Start: 2025-12-07 23:00 UTC 
+    # - End:   2025-12-08 23:00 UTC
+    
+    if target_date.tzinfo is None:
+        # Assume target_date is in Belgian time if no timezone specified
+        belgian_tz = timezone(timedelta(hours=1))
+        target_date = target_date.replace(tzinfo=belgian_tz)
+    
+    # Convert Belgian date to UTC (this automatically handles the -1 hour offset)
+    start_time_utc = target_date.astimezone(timezone.utc)
+    end_time_utc = start_time_utc + timedelta(days=1)
     
     # Format for ENTSO-E API
-    start_str = start_time.strftime('%Y%m%d%H%M')
-    end_str = end_time.strftime('%Y%m%d%H%M')
+    start_str = start_time_utc.strftime('%Y%m%d%H%M')
+    end_str = end_time_utc.strftime('%Y%m%d%H%M')
     
-    print(f"🔌 Ophalen dag-vooruit prijzen voor {target_date.strftime('%d/%m/%Y')}...")
+    print(f"🔌 Ophalen dag-vooruit prijzen voor {target_date.strftime('%d/%m/%Y')} (Belgische tijd)")
     print(f"🕐 UTC periode: {start_str} tot {end_str}")
+    print(f"🇧🇪 Belgische periode: {target_date.strftime('%Y-%m-%d 00:00')} tot {(target_date + timedelta(days=1)).strftime('%Y-%m-%d 00:00')}")
     
     params = {
         'securityToken': token,
@@ -220,18 +233,7 @@ def parse_entsoe_response(root, target_date):
                 print(f"❌ Could not parse start time: {start_time_text}")
                 continue
             
-            # More flexible date checking - allow data that overlaps with target date
-            period_date = period_start.date()
-            target_date_obj = target_date_utc.date()
-            
-            # Accept data for target date OR the day after (for overnight periods)
-            if period_date not in [target_date_obj, target_date_obj + timedelta(days=1)]:
-                print(f"⏭️ Skipping period {period_idx + 1} - date {period_date} not relevant for {target_date_obj}")
-                continue
-            
-            print(f"✅ Processing period {period_idx + 1} - start: {period_start}")
-            
-            # Get resolution
+            # Get resolution first to calculate period span
             resolution_elem = None
             if ns:
                 resolution_elem = period.find('.//ns:resolution', ns)
@@ -243,7 +245,6 @@ def parse_entsoe_response(root, target_date):
                         break
             
             resolution = resolution_elem.text if resolution_elem is not None else 'PT60M'
-            print(f"🔍 Resolution: {resolution}")
             
             # Calculate time delta based on resolution
             if resolution == 'PT15M':
@@ -253,13 +254,43 @@ def parse_entsoe_response(root, target_date):
             else:  # PT60M or default
                 time_delta = timedelta(hours=1)
             
-            # Find Point elements
+            # Find Point elements to determine period span
             if ns:
                 points = period.findall('.//ns:Point', ns)
             else:
                 points = [elem for elem in period.iter() if elem.tag.endswith('Point')]
             
-            print(f"🔍 Found {len(points)} points in this period")
+            if not points:
+                print(f"⚠️ No points found in period {period_idx + 1}")
+                continue
+            
+            # Calculate period end time
+            period_end = period_start + (time_delta * len(points))
+            
+            # Convert to local time to check date coverage
+            period_start_local = period_start.astimezone()
+            period_end_local = period_end.astimezone()
+            
+            # Check if this period covers our target date (in local time)
+            target_date_obj = target_date_utc.date()
+            period_start_date = period_start_local.date()
+            period_end_date = period_end_local.date()
+            
+            # Accept period if it covers the target date
+            covers_target_date = (
+                period_start_date <= target_date_obj <= period_end_date or
+                target_date_obj == period_start_date or
+                target_date_obj == period_end_date
+            )
+            
+            if not covers_target_date:
+                print(f"⏭️ Skipping period {period_idx + 1} - covers {period_start_date} to {period_end_date}, need {target_date_obj}")
+                continue
+            
+            print(f"✅ Processing period {period_idx + 1}")
+            print(f"   Period: {period_start_local.strftime('%Y-%m-%d %H:%M')} to {period_end_local.strftime('%Y-%m-%d %H:%M')}")
+            print(f"   Resolution: {resolution} ({len(points)} points)")
+            
             
             for point in points:
                 # Get position and price
@@ -284,8 +315,11 @@ def parse_entsoe_response(root, target_date):
                     # Convert to Belgian local time
                     local_time = point_time.astimezone()
                     
-                    # More flexible filtering - keep data that falls on target date
-                    if local_time.date() == target_date_obj:
+                    # Check if this point falls on our target date (in local time)
+                    local_date = local_time.date()
+                    target_date_local = target_date_utc.date()
+                    
+                    if local_date == target_date_local:
                         all_points.append({
                             'datetime': local_time,
                             'position': position,
@@ -294,6 +328,10 @@ def parse_entsoe_response(root, target_date):
                             'period_start': period_start,
                             'resolution': resolution
                         })
+                    else:
+                        # Debug: show why points are being skipped
+                        if len(all_points) < 5:  # Only show first few to avoid spam
+                            print(f"   Skipping point {position}: {local_date} != {target_date_local}")
                     
                 except (ValueError, TypeError) as e:
                     print(f"❌ Error parsing point: {e}")
@@ -462,10 +500,14 @@ def main():
     print("🇧🇪 Belgian Day-Ahead Price Scraper (CORRECTED VERSION)")
     print("=" * 60)
     
-    # Try several dates to find valid data
-    base_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    # Get current Belgian time
+    belgian_tz = timezone(timedelta(hours=1))  # CET (UTC+1)
+    now_belgian = datetime.now(belgian_tz)
+    base_date = now_belgian.replace(hour=0, minute=0, second=0, microsecond=0)
     
-    # Try: today, yesterday, day before yesterday, tomorrow
+    print(f"🇧🇪 Huidige Belgische tijd: {now_belgian.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+    
+    # Try: today, yesterday, day before yesterday, tomorrow (in Belgian time)
     dates_to_try = [
         (base_date, "today"),
         (base_date - timedelta(days=1), "yesterday"), 
@@ -479,7 +521,7 @@ def main():
             print(f"⏭️  Skipping {date_label} ({target_date.strftime('%Y-%m-%d')}) - weekend")
             continue
         
-        print(f"\n🎯 Attempting {date_label}: {target_date.strftime('%Y-%m-%d %A')}")
+        print(f"\n🎯 Attempting {date_label}: {target_date.strftime('%Y-%m-%d %A')} (Belgian time)")
         
         data = fetch_day_ahead_prices(target_date)
         
