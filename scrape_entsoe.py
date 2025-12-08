@@ -226,4 +226,104 @@ def format_price_data(prices):
     data = {
         "metadata": {
             "source": "ENTSO-E Transparency Platform",
-            "
+            "date": local_date.isoformat(),
+            "retrieved_at": datetime.now(timezone.utc).isoformat(),
+            "timezone": "Europe/Brussels",
+            "data_points": len(prices),
+            "statistics": {
+                "average_eur_mwh": round(avg_price, 2),
+                "min_eur_mwh": round(min_p["price_eur_mwh"], 2),
+                "max_eur_mwh": round(max_p["price_eur_mwh"], 2),
+                "min_hour": int(min_p["local_hour"]),
+                "max_hour": int(max_p["local_hour"]),
+            },
+        },
+        "prices": [],
+    }
+
+    for p in prices:
+        data["prices"].append(
+            {
+                "datetime": p["datetime_utc"].isoformat(),
+                "hour": int(p["local_hour"]),
+                "price_eur_mwh": round(p["price_eur_mwh"], 2),
+                "price_eur_kwh": round(p["price_eur_kwh"], 4),
+                "price_cent_kwh": round(p["price_eur_kwh"] * 100, 2),
+            }
+        )
+
+    return data
+
+
+def save_data(data):
+    """Save JSON, CSV en latest.json."""
+    if not data:
+        return False
+
+    date_str = data["metadata"]["date"].replace("-", "")
+
+    # JSON
+    json_file = f"day_ahead_prices_{date_str}.json"
+    with open(json_file, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+    print(f"💾 JSON saved: {json_file}")
+
+    # CSV
+    df = pd.DataFrame(
+        [
+            {
+                "datetime_utc": p["datetime"],
+                "hour_local": p["hour"],
+                "price_eur_mwh": p["price_eur_mwh"],
+                "price_eur_kwh": p["price_eur_kwh"],
+                "price_cent_kwh": p["price_cent_kwh"],
+            }
+            for p in data["prices"]
+        ]
+    )
+    csv_file = f"day_ahead_prices_{date_str}.csv"
+    df.to_csv(csv_file, index=False)
+    print(f"💾 CSV saved: {csv_file}")
+
+    # latest.json
+    with open("latest.json", "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+    print("💾 latest.json saved")
+
+    return True
+
+
+def main():
+    """Main entry: probeer vandaag en enkele dagen terug (lokale tijd)."""
+    print("🇧🇪 Belgian Day-Ahead Price Scraper")
+    print("=" * 50)
+
+    today_local = datetime.now(LOCAL_TZ).date()
+
+    for days_back in range(0, 4):
+        local_date = today_local - timedelta(days=days_back)
+
+        target_date_utc = datetime(
+            year=local_date.year,
+            month=local_date.month,
+            day=local_date.day,
+            tzinfo=LOCAL_TZ,
+        ).astimezone(timezone.utc)
+
+        print(f"\n🎯 Proberen lokale dag: {local_date} (UTC: {target_date_utc.date()})")
+
+        data = fetch_day_ahead_prices(target_date_utc)
+        if not data:
+            print(f"❌ Geen bruikbare data voor {local_date}")
+            continue
+
+        if save_data(data):
+            print(f"✅ Data succesvol opgeslagen voor {local_date}")
+            return
+
+    print("❌ Geen data beschikbaar voor de laatste dagen.")
+    sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
