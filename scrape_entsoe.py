@@ -154,7 +154,7 @@ def fetch_day_ahead_prices(target_date=None):
         return None
 
 def parse_entsoe_response(root, target_date):
-    """Parse ENTSO-E XML response with improved handling and duplicate prevention"""
+    """Parse ENTSO-E XML response with improved handling and proper resolution conversion"""
     prices = []
     
     # Try to detect namespace automatically
@@ -175,11 +175,10 @@ def parse_entsoe_response(root, target_date):
     
     print(f"🔍 Found {len(time_series_list)} TimeSeries elements")
     
-    # Convert target date to compare with periods
-    target_date_start = target_date.replace(tzinfo=timezone.utc)
-    target_date_end = target_date_start + timedelta(days=1)
+    # Convert target date for more flexible comparison
+    target_date_utc = target_date.replace(tzinfo=timezone.utc)
     
-    collected_points = {}  # Use dict to automatically handle duplicates by timestamp
+    all_points = []  # Collect all valid points
     
     for ts_idx, time_series in enumerate(time_series_list):
         print(f"🔍 Processing TimeSeries {ts_idx + 1}")
@@ -193,10 +192,14 @@ def parse_entsoe_response(root, target_date):
         print(f"🔍 Found {len(periods)} periods in TimeSeries {ts_idx + 1}")
         
         for period_idx, period in enumerate(periods):
-            # Get start time
-            start_time_elem = None
+            # Get start and end time
+            start_time_elem = end_time_elem = None
+            
             if ns:
-                start_time_elem = period.find('.//ns:start', ns)
+                interval = period.find('.//ns:timeInterval', ns)
+                if interval is not None:
+                    start_time_elem = interval.find('ns:start', ns)
+                    end_time_elem = interval.find('ns:end', ns)
             
             if start_time_elem is None:
                 # Try without namespace
@@ -217,11 +220,13 @@ def parse_entsoe_response(root, target_date):
                 print(f"❌ Could not parse start time: {start_time_text}")
                 continue
             
-            # Check if this period is for our target date
-            if not (target_date_start <= period_start < target_date_end):
-                print(f"⏭️ Skipping period {period_idx + 1} - outside target date range")
-                print(f"   Period start: {period_start}")
-                print(f"   Target range: {target_date_start} to {target_date_end}")
+            # More flexible date checking - allow data that overlaps with target date
+            period_date = period_start.date()
+            target_date_obj = target_date_utc.date()
+            
+            # Accept data for target date OR the day after (for overnight periods)
+            if period_date not in [target_date_obj, target_date_obj + timedelta(days=1)]:
+                print(f"⏭️ Skipping period {period_idx + 1} - date {period_date} not relevant for {target_date_obj}")
                 continue
             
             print(f"✅ Processing period {period_idx + 1} - start: {period_start}")
@@ -276,71 +281,91 @@ def parse_entsoe_response(root, target_date):
                     # Calculate exact timestamp
                     point_time = period_start + (time_delta * (position - 1))
                     
-                    # Double-check this point is within our target date
-                    if not (target_date_start <= point_time < target_date_end):
-                        print(f"⏭️ Skipping point at {point_time} - outside target date")
-                        continue
-                    
                     # Convert to Belgian local time
                     local_time = point_time.astimezone()
                     
-                    # Use timestamp as key to prevent duplicates
-                    timestamp_key = local_time.strftime('%Y-%m-%d %H:%M:%S')
-                    
-                    if timestamp_key in collected_points:
-                        print(f"⚠️ Duplicate timestamp detected: {timestamp_key} - keeping first occurrence")
-                        continue
-                    
-                    collected_points[timestamp_key] = {
-                        'datetime': local_time,
-                        'position': position,
-                        'price_eur_mwh': price,
-                        'price_eur_kwh': price / 1000,
-                        'period_start': period_start,
-                        'resolution': resolution
-                    }
+                    # More flexible filtering - keep data that falls on target date
+                    if local_time.date() == target_date_obj:
+                        all_points.append({
+                            'datetime': local_time,
+                            'position': position,
+                            'price_eur_mwh': price,
+                            'price_eur_kwh': price / 1000,
+                            'period_start': period_start,
+                            'resolution': resolution
+                        })
                     
                 except (ValueError, TypeError) as e:
                     print(f"❌ Error parsing point: {e}")
                     continue
     
-    # Convert dict to sorted list
-    all_points = list(collected_points.values())
+    print(f"🔍 Collected {len(all_points)} raw points")
+    
+    if not all_points:
+        return []
+    
+    # Sort by datetime
     all_points.sort(key=lambda x: x['datetime'])
     
+    # If we have high-resolution data (15min/30min), convert to hourly
+    resolution = all_points[0]['resolution']
+    if resolution in ['PT15M', 'PT30M']:
+        print(f"🔄 Converting {resolution} data to hourly averages...")
+        hourly_points = convert_to_hourly(all_points)
+    else:
+        print("ℹ️ Data is already hourly")
+        hourly_points = all_points
+    
+    # Remove duplicates based on hour
+    seen_hours = set()
+    unique_points = []
+    for point in hourly_points:
+        hour_key = point['datetime'].strftime('%Y-%m-%d %H')
+        if hour_key not in seen_hours:
+            seen_hours.add(hour_key)
+            unique_points.append(point)
+        else:
+            print(f"⚠️ Duplicate hour detected: {hour_key} - skipping")
+    
     # Add sequential hour numbers for display
-    for i, point in enumerate(all_points, 1):
+    for i, point in enumerate(unique_points, 1):
         point['hour'] = i
     
-    print(f"🔍 Final unique points after deduplication: {len(all_points)}")
+    print(f"🔍 Final unique hourly points: {len(unique_points)}")
     
-    # Final validation: ensure we have exactly one day's worth of data
-    if len(all_points) > 0:
-        first_time = all_points[0]['datetime']
-        last_time = all_points[-1]['datetime']
-        time_span = last_time - first_time
-        print(f"🔍 Data time span: {first_time.strftime('%H:%M')} to {last_time.strftime('%H:%M')} ({time_span})")
+    return unique_points
+
+def convert_to_hourly(points):
+    """Convert high-resolution data (15min/30min) to hourly averages"""
+    if not points:
+        return []
+    
+    hourly_data = {}
+    
+    for point in points:
+        # Group by hour
+        hour_key = point['datetime'].replace(minute=0, second=0, microsecond=0)
         
-        # Check if we have more than 24 hours of data
-        if time_span > timedelta(hours=25):  # Allow some tolerance
-            print(f"⚠️ Warning: Data spans more than 24 hours ({time_span})")
-            
-            # Filter to keep only data for the target date
-            target_date_local = target_date_start.astimezone()
-            filtered_points = []
-            
-            for point in all_points:
-                if point['datetime'].date() == target_date_local.date():
-                    filtered_points.append(point)
-            
-            print(f"🔍 After date filtering: {len(filtered_points)} points")
-            all_points = filtered_points
-            
-            # Re-assign hour numbers
-            for i, point in enumerate(all_points, 1):
-                point['hour'] = i
+        if hour_key not in hourly_data:
+            hourly_data[hour_key] = []
+        
+        hourly_data[hour_key].append(point['price_eur_mwh'])
     
-    return all_points
+    # Convert to hourly averages
+    hourly_points = []
+    for hour_time, prices in sorted(hourly_data.items()):
+        avg_price = sum(prices) / len(prices)
+        
+        hourly_points.append({
+            'datetime': hour_time,
+            'price_eur_mwh': avg_price,
+            'price_eur_kwh': avg_price / 1000,
+            'resolution': 'PT60M',  # Now converted to hourly
+            'data_points': len(prices)
+        })
+    
+    print(f"🔄 Converted {len(points)} high-res points to {len(hourly_points)} hourly averages")
+    return hourly_points
 
 def format_price_data(prices, target_date):
     """Format price data with enhanced validation"""
