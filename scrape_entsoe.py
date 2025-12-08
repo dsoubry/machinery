@@ -552,6 +552,61 @@ def format_price_data(prices, target_date):
     
     return result
 
+def save_combined_data(collected_data, primary_date):
+    """Save combined data for multiple days"""
+    if not collected_data:
+        return False
+    
+    # Create combined JSON structure
+    combined_data = {
+        'metadata': {
+            'source': 'ENTSO-E Transparency Platform',
+            'retrieved_at': datetime.now().isoformat(),
+            'timezone': 'Europe/Brussels',
+            'available_days': len(collected_data),
+            'primary_date': primary_date.strftime('%Y-%m-%d')
+        },
+        'days': {}
+    }
+    
+    # Add each day's data
+    for day_key, day_info in collected_data.items():
+        combined_data['days'][day_key] = day_info['data']
+    
+    # Save combined latest.json
+    with open('latest.json', 'w', encoding='utf-8') as f:
+        json.dump(combined_data, f, ensure_ascii=False, indent=2)
+    print(f"💾 Combined data saved: latest.json ({len(collected_data)} days)")
+    
+    # Save individual day files for backwards compatibility
+    for day_key, day_info in collected_data.items():
+        date_str = day_info['date'].replace('-', '')
+        
+        # Save individual JSON
+        json_filename = f'day_ahead_prices_{date_str}.json'
+        with open(json_filename, 'w', encoding='utf-8') as f:
+            json.dump(day_info['data'], f, ensure_ascii=False, indent=2)
+        print(f"💾 Individual JSON saved: {json_filename}")
+        
+        # Save individual CSV
+        df_data = []
+        for price in day_info['data']['prices']:
+            df_data.append({
+                'datetime': price['datetime'],
+                'hour': price['hour'],
+                'price_eur_mwh': price['price_eur_mwh'],
+                'price_eur_kwh': price['price_eur_kwh'],
+                'price_cent_kwh': price['price_cent_kwh']
+            })
+        
+        if df_data:
+            df = pd.DataFrame(df_data)
+            csv_filename = f'day_ahead_prices_{date_str}.csv'
+            df.to_csv(csv_filename, index=False)
+            print(f"💾 Individual CSV saved: {csv_filename}")
+    
+    return True
+
 def save_data(data, target_date):
     """Save data to files"""
     if not data:
@@ -590,47 +645,106 @@ def save_data(data, target_date):
     return True
 
 def main():
-    """Main function with enhanced error handling and multiple date attempts"""
+    """Main function - collect data for today and tomorrow"""
     print("🇧🇪 Belgian Day-Ahead Price Scraper (CORRECTED VERSION)")
     print("=" * 60)
     
     # Get current Belgian time
     belgian_tz = timezone(timedelta(hours=1))  # CET (UTC+1)
     now_belgian = datetime.now(belgian_tz)
-    base_date = now_belgian.replace(hour=0, minute=0, second=0, microsecond=0)
+    today = now_belgian.replace(hour=0, minute=0, second=0, microsecond=0)
+    tomorrow = today + timedelta(days=1)
     
     print(f"🇧🇪 Huidige Belgische tijd: {now_belgian.strftime('%Y-%m-%d %H:%M:%S %Z')}")
     
-    # Try: today, yesterday, day before yesterday, tomorrow (in Belgian time)
-    dates_to_try = [
-        (base_date, "today"),
-        (base_date - timedelta(days=1), "yesterday"), 
-        (base_date - timedelta(days=2), "2 days ago"),
-        (base_date + timedelta(days=1), "tomorrow")
+    collected_data = {}
+    
+    # Try to collect data for today
+    print(f"\n🎯 Ophalen data voor vandaag: {today.strftime('%Y-%m-%d %A')}")
+    today_data = fetch_day_ahead_prices(today)
+    
+    if today_data:
+        print(f"✅ Data voor vandaag gevonden")
+        collected_data['today'] = {
+            'data': today_data,
+            'date': today.strftime('%Y-%m-%d'),
+            'label': 'Vandaag'
+        }
+    else:
+        print(f"❌ Geen data voor vandaag")
+    
+    # Try to collect data for tomorrow
+    print(f"\n🎯 Ophalen data voor morgen: {tomorrow.strftime('%Y-%m-%d %A')}")
+    tomorrow_data = fetch_day_ahead_prices(tomorrow)
+    
+    if tomorrow_data:
+        print(f"✅ Data voor morgen gevonden")
+        collected_data['tomorrow'] = {
+            'data': tomorrow_data,
+            'date': tomorrow.strftime('%Y-%m-%d'),
+            'label': 'Morgen'
+        }
+    else:
+        print(f"❌ Geen data voor morgen")
+    
+    # If we have at least one dataset, save combined data
+    if collected_data:
+        combined_success = save_combined_data(collected_data, today)
+        
+        if combined_success:
+            print(f"\n✅ SUCCESS! Data opgeslagen voor {len(collected_data)} dag(en)")
+            
+            for day_key, day_info in collected_data.items():
+                stats = day_info['data']['metadata']['statistics']
+                blocks = day_info['data']['metadata'].get('cheapest_blocks', {})
+                best_3h = blocks.get('3_hours')
+                
+                print(f"📊 {day_info['label']} ({day_info['date']}): €{stats['min_eur_mwh']}-{stats['max_eur_mwh']}/MWh")
+                
+                if best_3h:
+                    # Handle datetime formatting safely
+                    start_time_obj = best_3h['start_time']
+                    end_time_obj = best_3h['end_time']
+                    
+                    if hasattr(start_time_obj, 'strftime'):
+                        start_time = start_time_obj.strftime('%H:%M')
+                        end_time = end_time_obj.strftime('%H:%M')
+                    else:
+                        start_time = datetime.fromisoformat(start_time_obj.replace('Z', '+00:00')).strftime('%H:%M')
+                        end_time = datetime.fromisoformat(end_time_obj.replace('Z', '+00:00')).strftime('%H:%M')
+                    
+                    print(f"💡 Beste 3u blok: {start_time}-{end_time} (€{best_3h['average_price']:.2f}/MWh)")
+            
+            return  # Success
+        else:
+            print("❌ Fout bij opslaan gecombineerde data")
+    
+    # Fallback: try recent days if no current data available
+    print(f"\n🔄 Geen actuele data gevonden, proberen eerdere dagen...")
+    
+    fallback_dates = [
+        (today - timedelta(days=1), "gisteren"),
+        (today - timedelta(days=2), "eergisteren"),
+        (today + timedelta(days=2), "overmorgen")
     ]
     
-    for target_date, date_label in dates_to_try:
-        # Skip weekends for day-ahead markets (usually no trading)
-        if target_date.weekday() >= 5:  # Saturday = 5, Sunday = 6
-            print(f"⏭️  Skipping {date_label} ({target_date.strftime('%Y-%m-%d')}) - weekend")
+    for target_date, date_label in fallback_dates:
+        if target_date.weekday() >= 5:  # Skip weekends
+            print(f"⏭️ Skipping {date_label} - weekend")
             continue
         
-        print(f"\n🎯 Attempting {date_label}: {target_date.strftime('%Y-%m-%d %A')} (Belgian time)")
+        print(f"\n🎯 Proberen {date_label}: {target_date.strftime('%Y-%m-%d %A')}")
         
         data = fetch_day_ahead_prices(target_date)
-        
         if data:
+            # Save as single day fallback
             success = save_data(data, target_date)
             if success:
                 stats = data['metadata']['statistics']
-                print(f"\n✅ SUCCESS! Data voor {target_date.strftime('%d/%m/%Y')} opgehaald")
+                print(f"\n✅ SUCCESS! Fallback data voor {target_date.strftime('%d/%m/%Y')} opgehaald")
                 print(f"📊 {data['metadata']['data_points']} prijspunten")
-                print(f"📊 €{stats['min_eur_mwh']}-{stats['max_eur_mwh']}/MWh (spread: €{stats['price_spread']}/MWh)")
-                return  # Exit successfully
-            else:
-                print("❌ Fout bij opslaan data")
-        else:
-            print(f"❌ Geen geldige data voor {date_label}")
+                print(f"📊 €{stats['min_eur_mwh']}-{stats['max_eur_mwh']}/MWh")
+                return
     
     print("\n❌ Geen geldige data gevonden voor alle geprobeerde datums")
     print("💡 Mogelijke oorzaken:")
