@@ -364,4 +364,5 @@ def main():
             tzinfo=LOCAL_TZ,
         ).astimezone(timezone.utc)
 
-        print(f"\n🎯 Proberen lokale dag: {local_date} (=> UTC: {target_date_utc.date_
+        print(f"\n🎯 Proberen lokale dag: {local_date} (=> UTC: {target_date_utc.date()})")
+
