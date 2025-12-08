@@ -8,6 +8,11 @@ on:
     branches: [ main ]
   workflow_dispatch:  # Allow manual trigger
 
+# Add permissions for GitHub Actions to push back to repo
+permissions:
+  contents: write
+  actions: read
+
 env:
   TZ: Europe/Brussels
 
@@ -18,9 +23,11 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
       
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
         
