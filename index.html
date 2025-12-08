@@ -32,206 +32,9 @@
       border: 1px solid rgba(148, 163, 184, 0.5);
     }
 
-    .results {
-      margin-top: 1.5rem;
-      display: grid;
-      grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
-      gap: 1.5rem;
-    }
-
-    @media (max-width: 800px) {
-      .results {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .summary {
-      border-radius: 1rem;
-      padding: 1rem;
-      background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.3), rgba(15, 23, 42, 0.9));
-      border: 1px solid rgba(34, 197, 94, 0.5);
-      min-height: 110px;
-    }
-
-    .summary h2 {
-      margin-top: 0;
-      font-size: 1.1rem;
-    }
-
-    .summary p {
-      margin: 0.15rem 0;
-      font-size: 0.9rem;
-    }
-
-    .summary strong {
-      color: #bbf7d0;
-    }
-
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.85rem;
-      overflow: hidden;
-      border-radius: 1rem;
-    }
-
-    thead {
-      background: #020617;
-    }
-
-    th, td {
-      padding: 0.4rem 0.5rem;
-      text-align: right;
-      border-bottom: 1px solid #1f2937;
-      white-space: nowrap;
-    }
-
-    th:first-child, td:first-child {
-      text-align: left;
-    }
-
-    tbody tr:nth-child(even) {
-      background: rgba(15, 23, 42, 0.7);
-    }
-
-    .best-block {
-      background: rgba(34, 197, 94, 0.12) !important;
-      position: relative;
-    }
-
-    .best-block::before {
-      content: "★";
-      position: absolute;
-      left: 4px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 0.7rem;
-      color: #22c55e;
-    }
-
-    .bar-cell {
-      width: 35%;
-    }
-
-    .bar-wrapper {
-      height: 8px;
-      border-radius: 999px;
-      background: rgba(31, 41, 55, 0.9);
-      overflow: hidden;
-    }
-
-    .bar {
-      height: 100%;
-      border-radius: inherit;
-      background: linear-gradient(90deg, #22c55e, #fbbf24, #f97316, #ef4444);
-      width: 0%;
-      transition: width 0.3s ease;
-    }
-
-    /* Mobile responsive table */
-    @media (max-width: 600px) {
-      table, thead, tbody, th, td, tr {
-        display: block;
-      }
-      
-      thead tr {
-        position: absolute;
-        top: -9999px;
-        left: -9999px;
-      }
-      
-      tbody tr {
-        border: 1px solid #1f2937;
-        border-radius: 0.5rem;
-        margin-bottom: 0.75rem;
-        padding: 0.75rem;
-        background: rgba(15, 23, 42, 0.7);
-        position: relative;
-      }
-      
-      tbody tr.best-block {
-        background: rgba(34, 197, 94, 0.12);
-        border: 1px solid rgba(34, 197, 94, 0.3);
-      }
-      
-      tbody tr.best-block::before {
-        content: "★ LAAGSTE PRIJS";
-        position: absolute;
-        top: 0.5rem;
-        right: 0.75rem;
-        font-size: 0.7rem;
-        color: #22c55e;
-        font-weight: bold;
-      }
-      
-      td {
-        border: none;
-        border-bottom: 1px solid #1f2937;
-        position: relative;
-        padding: 0.4rem 0 0.4rem 45%;
-        text-align: left !important;
-        white-space: normal;
-      }
-      
-      td:last-child {
-        border-bottom: none;
-      }
-      
-      td:before {
-        content: attr(data-label) ": ";
-        position: absolute;
-        left: 0;
-        width: 40%;
-        padding-right: 10px;
-        white-space: nowrap;
-        color: #9ca3af;
-        font-weight: bold;
-        font-size: 0.75rem;
-      }
-      
-      .bar-cell {
-        width: auto;
-      }
-      
-      .bar-wrapper {
-        margin-top: 0.25rem;
-      }
-    }
-
-    .note {
-      margin-top: 0.75rem;
-      font-size: 0.8rem;
-      color: #9ca3af;
-    }
-
-    .small {
-      font-size: 0.75rem;
-    }
-
-    .status-box {
-      margin-top: 0.75rem;
-      font-size: 0.8rem;
-      color: #9ca3af;
-    }
-
-    .tips {
-      margin-top: 1rem;
-      padding: 1rem;
-      background: rgba(34, 197, 94, 0.1);
-      border: 1px solid rgba(34, 197, 94, 0.3);
-      border-radius: 1rem;
-    }
-
-    .tips h3 {
-      margin-top: 0;
-      font-size: 1rem;
-      color: #bbf7d0;
-    }
-
-    .tips p {
-      margin: 0.25rem 0;
-      font-size: 0.85rem;
-      color: #d1fae5;
     }
   </style>
 </head>
@@ -244,29 +47,10 @@
     </p>
 
     <div class="status-box">
-      Laatste update: 08/12/2025 om 11:36 • Data voor: maandag 08 december 2025
+      Laatste update: 08/12/2025 om 12:16 • Data voor: maandag 08 december 2025
     </div>
 
-    <div class="results">
-      <div>
-        <div class="summary">
-          <h2>Prijsoverzicht</h2>
-          <p><strong>Gemiddelde prijs:</strong> €64.46/MWh</p>
-          <p><strong>Laagste prijs:</strong> €7.00/MWh (uur 15)</p>
-          <p><strong>Hoogste prijs:</strong> €105.73/MWh (uur 72)</p>
-          <p><strong>Datapunten:</strong> 95 uurprijzen</p>
-        </div>
-
-        <div class="tips">
-          <h3>💡 Energiebespaartips</h3>
-          <p><strong>Gebruik apparaten tijdens groene uren</strong> (★ in tabel)</p>
-          <p><strong>Vermijd hoog verbruik tijdens piekuren</strong></p>
-          <p><strong>Plan wasmachine/vaatwas</strong> voor goedkoopste momenten</p>
-          <p><strong>Laad elektrische auto op</strong> tijdens laagste prijzen</p>
-        </div>
-      </div>
-
-      <div>
+    <div>
         <table>
           <thead>
             <tr>
@@ -1323,17 +1107,6 @@
             </tr>
         </tbody>
         </table>
-        <div class="note">
-          Balkjes tonen de relatieve prijs t.o.v. de duurste uurprijs van de dag.
-          ★ = Laagste prijs van de dag.
-        </div>
-      </div>
-    </div>
-
-    <div class="note" style="text-align: center; margin-top: 2rem; border-top: 1px solid #1f2937; padding-top: 1rem;">
-      Data: ENTSO-E Transparency Platform • 
-      <a href="https://github.com/dsoubry/machinery" style="color: #22c55e;">GitHub</a> • 
-      <a href="https://transparency.entsoe.eu/" style="color: #22c55e;">ENTSO-E</a>
     </div>
   </div>
 </body>
