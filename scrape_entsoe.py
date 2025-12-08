@@ -79,108 +79,33 @@ def fetch_api_xml(date):
 # ------------------------- Parse Prices -------------------------
 
 def parse_prices(root, target_date):
-    """
-    Extracts EXACTLY the same prices shown on ENTSO-E UI.
-    Filters correctly on:
-    - Hourly resolution (PT60M)
-    - Currency EUR
-    - One correct TimeSeries
-    """
+    print("🔎 DEBUG: Inspecting TimeSeries returned by ENTSO-E...")
 
     prices = []
     ns = detect_ns(root)
-    find = lambda path: root.findall(path, ns) if ns else root.findall(path)
 
-    # Find all TimeSeries objects
-    ts_list = find(".//ns:TimeSeries" if ns else ".//TimeSeries")
+    # Find raw TS elements
+    ts_list = root.findall(".//ns:TimeSeries", ns) if ns else root.findall(".//TimeSeries")
+    print(f"🔎 Found {len(ts_list)} TimeSeries")
 
-    if not ts_list:
-        print("❌ No TimeSeries found")
-        return None
+    # Log each TS
+    for i, ts in enumerate(ts_list, start=1):
+        print(f"\n--- TimeSeries {i} ---")
 
-    # --- Filter down to the correct TimeSeries ---
-    selected_ts = None
+        def get_text(elem, path):
+            e = elem.find(path, ns)
+            if e is None:
+                p = path.replace("ns:", "")
+                e = elem.find(p)
+            return e.text if e is not None else None
 
-    for ts in ts_list:
-        # resolution
-        res = ts.find(".//ns:resolution", ns)
-        if res is None:
-            res = ts.find(".//resolution")
+        print("resolution:", get_text(ts, ".//ns:resolution"))
+        print("currency:", get_text(ts, ".//ns:currency_Unit.name"))
+        print("price measure unit:", get_text(ts, ".//ns:price_Measure_Unit.name"))
 
-        if not res or res.text != "PT60M":   # must be hourly
-            continue
+    print("\n⚠️ Stopping after debug output.")
+    sys.exit(0)
 
-        # currency
-        cur = ts.find(".//ns:currency_Unit.name", ns)
-        if cur is None:
-            cur = ts.find(".//currency_Unit.name")
-
-        if not cur or cur.text != "EUR":
-            continue
-
-        # measure
-        mu = ts.find(".//ns:price_Measure_Unit.name", ns)
-        if mu is None:
-            mu = ts.find(".//price_Measure_Unit.name")
-
-        if not mu or mu.text != "MWH":
-            continue
-
-        # → This is the correct one
-        selected_ts = ts
-        break
-
-    if selected_ts is None:
-        print("❌ No valid TimeSeries (EUR + MWH + hourly)")
-        return None
-
-    # --- Extract Period ---
-    period = selected_ts.find(".//ns:Period", ns)
-    if period is None:
-        period = selected_ts.find(".//Period")
-
-    start_el = period.find(".//ns:start", ns)
-    if start_el is None:
-        start_el = period.find(".//start")
-
-    start_ts = parse_iso(start_el.text)
-
-    # --- Extract Points ---
-    point_elems = period.findall(".//ns:Point", ns)
-    if not point_elems:
-        point_elems = period.findall(".//Point")
-
-    for p in point_elems:
-        pos = p.find(".//ns:position", ns)
-        if pos is None:
-            pos = p.find(".//position")
-
-        price_el = p.find(".//ns:price.amount", ns)
-        if price_el is None:
-            price_el = p.find(".//price.amount")
-
-        if pos is None or price_el is None:
-            continue
-
-        position = int(pos.text)
-        price = float(price_el.text)
-
-        ts_local = (start_ts + timedelta(hours=position-1)).astimezone(timezone.utc)
-
-        prices.append({
-            "hour": position,
-            "datetime": ts_local.isoformat(),
-            "price_eur_mwh": round(price, 2),
-            "price_eur_kwh": round(price / 1000, 4),
-            "price_cent_kwh": round(price / 10, 2)
-        })
-
-    prices.sort(key=lambda x: x["hour"])
-
-    if len(prices) != 24:
-        print(f"⚠️ Warning: Expected 24 prices, got {len(prices)}")
-
-    return prices
 
 
 # ------------------------- Format Output -------------------------
@@ -248,3 +173,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
