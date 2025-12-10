@@ -659,7 +659,7 @@ def main():
     
     collected_data = {}
     
-    # Try to collect data for today
+    # Always try to collect data for TODAY and TOMORROW (not yesterday)
     print(f"\n🎯 Ophalen data voor vandaag: {today.strftime('%Y-%m-%d %A')}")
     today_data = fetch_day_ahead_prices(today)
     
@@ -668,12 +668,26 @@ def main():
         collected_data['today'] = {
             'data': today_data,
             'date': today.strftime('%Y-%m-%d'),
-            'label': 'Vandaag'
+            'label': f"Vandaag ({today.strftime('%d/%m')})"
         }
     else:
         print(f"❌ Geen data voor vandaag")
+        
+        # If no data for today, try yesterday as fallback
+        yesterday = today - timedelta(days=1)
+        if yesterday.weekday() < 5:  # Not weekend
+            print(f"🔄 Proberen gisteren als fallback: {yesterday.strftime('%Y-%m-%d %A')}")
+            yesterday_data = fetch_day_ahead_prices(yesterday)
+            
+            if yesterday_data:
+                print(f"✅ Fallback data voor gisteren gevonden")
+                collected_data['yesterday'] = {
+                    'data': yesterday_data,
+                    'date': yesterday.strftime('%Y-%m-%d'),
+                    'label': f"Gisteren ({yesterday.strftime('%d/%m')})"
+                }
     
-    # Try to collect data for tomorrow
+    # Always try to collect data for TOMORROW
     print(f"\n🎯 Ophalen data voor morgen: {tomorrow.strftime('%Y-%m-%d %A')}")
     tomorrow_data = fetch_day_ahead_prices(tomorrow)
     
@@ -682,7 +696,7 @@ def main():
         collected_data['tomorrow'] = {
             'data': tomorrow_data,
             'date': tomorrow.strftime('%Y-%m-%d'),
-            'label': 'Morgen'
+            'label': f"Morgen ({tomorrow.strftime('%d/%m')})"
         }
     else:
         print(f"❌ Geen data voor morgen")
@@ -699,7 +713,7 @@ def main():
                 blocks = day_info['data']['metadata'].get('cheapest_blocks', {})
                 best_3h = blocks.get('3_hours')
                 
-                print(f"📊 {day_info['label']} ({day_info['date']}): €{stats['min_eur_mwh']}-{stats['max_eur_mwh']}/MWh")
+                print(f"📊 {day_info['label']}: €{stats['min_eur_mwh']}-{stats['max_eur_mwh']}/MWh")
                 
                 if best_3h:
                     # Handle datetime formatting safely
@@ -719,8 +733,8 @@ def main():
         else:
             print("❌ Fout bij opslaan gecombineerde data")
     
-    # Fallback: try recent days if no current data available
-    print(f"\n🔄 Geen actuele data gevonden, proberen eerdere dagen...")
+    # Fallback: try other recent days if no current data available
+    print(f"\n🔄 Geen actuele data gevonden, proberen andere dagen...")
     
     fallback_dates = [
         (today - timedelta(days=1), "gisteren"),
