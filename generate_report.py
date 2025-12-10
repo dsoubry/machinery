@@ -6,7 +6,7 @@ Maintains the beautiful dark aesthetic with modern styling
 
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 def format_cheapest_blocks_html(cheapest_blocks):
     """Format cheapest consecutive blocks for HTML display"""
@@ -483,17 +483,48 @@ def generate_error_page():
     return html
 
 def generate_tabs_html(days_data):
-    """Generate tabs HTML for multiple days"""
+    """Generate tabs HTML with dynamic labels based on current date"""
     tabs_html = '<div class="tabs">\n'
     
-    day_labels = {
-        'today': 'Vandaag',
-        'tomorrow': 'Morgen',
-        'yesterday': 'Gisteren'
-    }
+    # Get current Belgian date
+    belgian_tz = timezone(timedelta(hours=1))
+    current_date = datetime.now(belgian_tz).date()
     
-    for day_key in days_data.keys():
-        label = day_labels.get(day_key, day_key.title())
+    for day_key, day_data in days_data.items():
+        # Get the date from the actual data
+        day_metadata = day_data.get('metadata', {})
+        day_date_str = day_metadata.get('date', '')
+        
+        try:
+            day_date = datetime.fromisoformat(day_date_str).date()
+            
+            # Calculate dynamic label based on current date
+            day_diff = (day_date - current_date).days
+            
+            if day_diff == 0:
+                label = 'Vandaag'
+            elif day_diff == 1:
+                label = 'Morgen'
+            elif day_diff == -1:
+                label = 'Gisteren'
+            elif day_diff == -2:
+                label = 'Eergisteren'
+            elif day_diff == 2:
+                label = 'Overmorgen'
+            else:
+                # Use day name + date for other days
+                day_names = {
+                    'Monday': 'Maandag', 'Tuesday': 'Dinsdag', 'Wednesday': 'Woensdag',
+                    'Thursday': 'Donderdag', 'Friday': 'Vrijdag', 'Saturday': 'Zaterdag', 'Sunday': 'Zondag'
+                }
+                day_name = day_names.get(day_date.strftime('%A'), day_date.strftime('%A'))
+                label = f"{day_name} {day_date.day}/{day_date.month}"
+                
+        except (ValueError, TypeError):
+            # Fallback to original day key if date parsing fails
+            day_labels = {'today': 'Vandaag', 'tomorrow': 'Morgen', 'yesterday': 'Gisteren'}
+            label = day_labels.get(day_key, day_key.title())
+        
         tabs_html += f'  <div class="tab" id="tab-{day_key}" onclick="showDay(\'{day_key}\')">{label}</div>\n'
     
     tabs_html += '</div>\n'
