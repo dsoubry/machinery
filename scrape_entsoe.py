@@ -760,10 +760,12 @@ def main():
                 print(f"📊 €{stats['min_eur_mwh']}-{stats['max_eur_mwh']}/MWh")
                 return
     
-print("\n⚠️ Geen nieuwe data opgehaald – bestaande data blijft geldig")
-sys.exit(0)
-
+    print("\n❌ Geen geldige data gevonden voor alle geprobeerde datums")
+    print("💡 Mogelijke oorzaken:")
+    print("   - ENTSO-E service tijdelijk niet beschikbaar")
+    print("   - Token problemen")
+    print("   - Weekend/feestdag (geen day-ahead trading)")
+    sys.exit(1)
 
 if __name__ == "__main__":
     main()
-
