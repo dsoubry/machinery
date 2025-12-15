@@ -2,13 +2,11 @@ name: Update Belgian Day-Ahead Prices
 
 on:
   schedule:
-    # Run every day at 14:30 CET (when next-day prices are typically published)
-    - cron: '30 13 * * *'  # 13:30 UTC = 14:30 CET
+    - cron: '30 13 * * *'
   push:
     branches: [ main ]
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch:
 
-# Add permissions for GitHub Actions to push back to repo
 permissions:
   contents: write
   actions: read
@@ -19,33 +17,43 @@ env:
 jobs:
   update-prices:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-      
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-        
+
     - name: Install dependencies
       run: |
         pip install --upgrade pip
         pip install requests pandas python-dateutil
-        
+
     - name: Fetch day-ahead prices
       env:
         ENTSOE_TOKEN: ${{ secrets.ENTSOE_TOKEN }}
       run: |
         python scrape_entsoe.py
-        
+
+    # 🔥 NIEUWE STAP — AUTOMATISCHE DEPLOY NAAR LAN
+    - name: Upload latest.json to LAN server
+      uses: appleboy/scp-action@v1
+      with:
+        host: ${{ secrets.LAN_HOST }}
+        username: ${{ secrets.LAN_USER }}
+        key: ${{ secrets.LAN_SSH_KEY }}
+        source: "latest.json"
+        target: ${{ secrets.LAN_PATH }}
+
     - name: Generate HTML report
       run: |
         python generate_report.py
-        
+
     - name: Commit and push if changed
       run: |
         git config --local user.email "action@github.com"
