@@ -40,16 +40,6 @@ jobs:
       run: |
         python scrape_entsoe.py
 
-    # 🔥 NIEUWE STAP — AUTOMATISCHE DEPLOY NAAR LAN
-    - name: Upload latest.json to LAN server
-      uses: appleboy/scp-action@v1
-      with:
-        host: ${{ secrets.LAN_HOST }}
-        username: ${{ secrets.LAN_USER }}
-        key: ${{ secrets.LAN_SSH_KEY }}
-        source: "latest.json"
-        target: ${{ secrets.LAN_PATH }}
-
     - name: Generate HTML report
       run: |
         python generate_report.py
