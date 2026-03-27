@@ -1,7 +1,7 @@
 {
   "metadata": {
     "source": "ENTSO-E Transparency Platform",
-    "retrieved_at": "2026-03-27T11:15:36.164609",
+    "retrieved_at": "2026-03-27T17:27:50.799574",
     "timezone": "Europe/Brussels",
     "available_days": 1,
     "primary_date": "2026-03-27"
@@ -11,7 +11,7 @@
       "metadata": {
         "source": "ENTSO-E Transparency Platform",
         "date": "2026-03-27",
-        "retrieved_at": "2026-03-27T11:15:22.817214",
+        "retrieved_at": "2026-03-27T17:27:45.709978",
         "timezone": "Europe/Brussels",
         "data_points": 24,
         "resolution": "PT60M",
