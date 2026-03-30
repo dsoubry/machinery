@@ -10,6 +10,7 @@ import json
 import requests
 import pandas as pd
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 import xml.etree.ElementTree as ET
 
 # ENTSO-E API Configuration
