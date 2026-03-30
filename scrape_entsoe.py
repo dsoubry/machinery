@@ -79,9 +79,11 @@ def fetch_day_ahead_prices(target_date=None):
     
     # Default to today's prices (Belgian local time)
     if target_date is None:
-        # Get today in Belgian timezone
-        belgian_tz = timezone(timedelta(hours=1))  # CET (UTC+1)
-        target_date = datetime.now(belgian_tz).replace(hour=0, minute=0, second=0, microsecond=0)
+        target_date = datetime.now(ZoneInfo('Europe/Brussels')).replace(
+        hour=0, minute=0, second=0, microsecond=0)
+
+    if target_date.tzinfo is None:
+       target_date = target_date.replace(tzinfo=ZoneInfo('Europe/Brussels'))
     
     # Convert target date to UTC for ENTSO-E API
     # For Belgian date 2025-12-08 00:00 CET, we need UTC period:
@@ -651,7 +653,7 @@ def main():
     
     # Get current Belgian time
     belgian_tz = timezone(timedelta(hours=1))  # CET (UTC+1)
-    now_belgian = datetime.now(belgian_tz)
+    now_belgian = datetime.now(ZoneInfo('Europe/Brussels'))
     today = now_belgian.replace(hour=0, minute=0, second=0, microsecond=0)
     tomorrow = today + timedelta(days=1)
     
