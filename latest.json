@@ -1,7 +1,7 @@
 {
   "metadata": {
     "source": "ENTSO-E Transparency Platform / EPEX SPOT",
-    "retrieved_at": "2026-04-10T16:25:47.584253",
+    "retrieved_at": "2026-04-10T16:33:29.755329",
     "timezone": "Europe/Brussels",
     "available_days": 2,
     "primary_date": "2026-04-10"
@@ -11,7 +11,7 @@
       "metadata": {
         "source": "ENTSO-E",
         "date": "2026-04-10",
-        "retrieved_at": "2026-04-10T16:25:46.900955",
+        "retrieved_at": "2026-04-10T16:33:26.873401",
         "timezone": "Europe/Brussels",
         "data_points": 24,
         "resolution": "PT60M",
@@ -230,7 +230,7 @@
       "metadata": {
         "source": "ENTSO-E",
         "date": "2026-04-11",
-        "retrieved_at": "2026-04-10T16:25:47.583119",
+        "retrieved_at": "2026-04-10T16:33:29.754469",
         "timezone": "Europe/Brussels",
         "data_points": 24,
         "resolution": "PT60M",
