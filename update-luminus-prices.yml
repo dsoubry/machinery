@@ -1,14 +1,19 @@
 name: Update Belgian Day-Ahead Prices
+
 on:
   schedule:
-    - cron: '30 13 * * *'
-  push:
-    branches: [ main ]
+    - cron: '20 12 * * *'
+    - cron: '35 13 * * *'
+    - cron: '50 14 * * *'
   workflow_dispatch:
 
 permissions:
   contents: write
   actions: read
+
+concurrency:
+  group: update-belgian-day-ahead-prices
+  cancel-in-progress: true
 
 env:
   TZ: Europe/Brussels
@@ -17,11 +22,13 @@ env:
 jobs:
   update-prices:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -32,6 +39,11 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install requests pandas python-dateutil
+
+      - name: Sync with remote
+        run: |
+          git fetch origin main
+          git pull --rebase origin main
 
       - name: Fetch day-ahead prices
         env:
@@ -48,13 +60,14 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add -A
+
           if git diff --staged --quiet; then
             echo "No changes to commit"
-          else
-            git commit -m "Update day-ahead prices $(date -d 'tomorrow' +'%Y-%m-%d')"
-            git pull --rebase origin main
-            git push origin main
+            exit 0
           fi
+
+          git commit -m "Update day-ahead prices $(date -d 'tomorrow' +'%Y-%m-%d')"
+          git push origin main
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
