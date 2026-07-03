@@ -1,0 +1,219 @@
+{
+  "metadata": {
+    "source": "ENTSO-E",
+    "date": "2026-07-04",
+    "retrieved_at": "2026-07-03T17:33:12.846385",
+    "timezone": "Europe/Brussels",
+    "data_points": 24,
+    "resolution": "PT60M",
+    "statistics": {
+      "average_eur_mwh": 61.39,
+      "min_eur_mwh": -9.32,
+      "max_eur_mwh": 130.0,
+      "min_hour": 15,
+      "max_hour": 24,
+      "price_spread": 139.32
+    },
+    "cheapest_blocks": {
+      "1_hour": {
+        "hour": 15,
+        "time": "2026-07-04T14:00:00+02:00",
+        "price": -9.32
+      },
+      "2_hours": {
+        "start_hour": 14,
+        "end_hour": 15,
+        "start_time": "2026-07-04T13:00:00+02:00",
+        "end_time": "2026-07-04T14:00:00+02:00",
+        "average_price": -8.36,
+        "hours": 2
+      },
+      "3_hours": {
+        "start_hour": 14,
+        "end_hour": 16,
+        "start_time": "2026-07-04T13:00:00+02:00",
+        "end_time": "2026-07-04T15:00:00+02:00",
+        "average_price": -6.86,
+        "hours": 3
+      },
+      "4_hours": {
+        "start_hour": 13,
+        "end_hour": 16,
+        "start_time": "2026-07-04T12:00:00+02:00",
+        "end_time": "2026-07-04T15:00:00+02:00",
+        "average_price": -5.84,
+        "hours": 4
+      }
+    }
+  },
+  "prices": [
+    {
+      "hour": 1,
+      "datetime": "2026-07-04T00:00:00+02:00",
+      "price_eur_mwh": 127.05,
+      "price_eur_kwh": 0.1271,
+      "price_cent_kwh": 12.71
+    },
+    {
+      "hour": 2,
+      "datetime": "2026-07-04T01:00:00+02:00",
+      "price_eur_mwh": 118.87,
+      "price_eur_kwh": 0.1189,
+      "price_cent_kwh": 11.89
+    },
+    {
+      "hour": 3,
+      "datetime": "2026-07-04T02:00:00+02:00",
+      "price_eur_mwh": 111.92,
+      "price_eur_kwh": 0.1119,
+      "price_cent_kwh": 11.19
+    },
+    {
+      "hour": 4,
+      "datetime": "2026-07-04T03:00:00+02:00",
+      "price_eur_mwh": 104.28,
+      "price_eur_kwh": 0.1043,
+      "price_cent_kwh": 10.43
+    },
+    {
+      "hour": 5,
+      "datetime": "2026-07-04T04:00:00+02:00",
+      "price_eur_mwh": 96.84,
+      "price_eur_kwh": 0.0968,
+      "price_cent_kwh": 9.68
+    },
+    {
+      "hour": 6,
+      "datetime": "2026-07-04T05:00:00+02:00",
+      "price_eur_mwh": 94.52,
+      "price_eur_kwh": 0.0945,
+      "price_cent_kwh": 9.45
+    },
+    {
+      "hour": 7,
+      "datetime": "2026-07-04T06:00:00+02:00",
+      "price_eur_mwh": 88.43,
+      "price_eur_kwh": 0.0884,
+      "price_cent_kwh": 8.84
+    },
+    {
+      "hour": 8,
+      "datetime": "2026-07-04T07:00:00+02:00",
+      "price_eur_mwh": 67.25,
+      "price_eur_kwh": 0.0673,
+      "price_cent_kwh": 6.73
+    },
+    {
+      "hour": 9,
+      "datetime": "2026-07-04T08:00:00+02:00",
+      "price_eur_mwh": 27.82,
+      "price_eur_kwh": 0.0278,
+      "price_cent_kwh": 2.78
+    },
+    {
+      "hour": 10,
+      "datetime": "2026-07-04T09:00:00+02:00",
+      "price_eur_mwh": 1.13,
+      "price_eur_kwh": 0.0011,
+      "price_cent_kwh": 0.11
+    },
+    {
+      "hour": 11,
+      "datetime": "2026-07-04T10:00:00+02:00",
+      "price_eur_mwh": -0.03,
+      "price_eur_kwh": -0.0,
+      "price_cent_kwh": -0.0
+    },
+    {
+      "hour": 12,
+      "datetime": "2026-07-04T11:00:00+02:00",
+      "price_eur_mwh": -0.72,
+      "price_eur_kwh": -0.0007,
+      "price_cent_kwh": -0.07
+    },
+    {
+      "hour": 13,
+      "datetime": "2026-07-04T12:00:00+02:00",
+      "price_eur_mwh": -2.78,
+      "price_eur_kwh": -0.0028,
+      "price_cent_kwh": -0.28
+    },
+    {
+      "hour": 14,
+      "datetime": "2026-07-04T13:00:00+02:00",
+      "price_eur_mwh": -7.41,
+      "price_eur_kwh": -0.0074,
+      "price_cent_kwh": -0.74
+    },
+    {
+      "hour": 15,
+      "datetime": "2026-07-04T14:00:00+02:00",
+      "price_eur_mwh": -9.32,
+      "price_eur_kwh": -0.0093,
+      "price_cent_kwh": -0.93
+    },
+    {
+      "hour": 16,
+      "datetime": "2026-07-04T15:00:00+02:00",
+      "price_eur_mwh": -3.86,
+      "price_eur_kwh": -0.0039,
+      "price_cent_kwh": -0.39
+    },
+    {
+      "hour": 17,
+      "datetime": "2026-07-04T16:00:00+02:00",
+      "price_eur_mwh": -0.29,
+      "price_eur_kwh": -0.0003,
+      "price_cent_kwh": -0.03
+    },
+    {
+      "hour": 18,
+      "datetime": "2026-07-04T17:00:00+02:00",
+      "price_eur_mwh": 4.3,
+      "price_eur_kwh": 0.0043,
+      "price_cent_kwh": 0.43
+    },
+    {
+      "hour": 19,
+      "datetime": "2026-07-04T18:00:00+02:00",
+      "price_eur_mwh": 46.88,
+      "price_eur_kwh": 0.0469,
+      "price_cent_kwh": 4.69
+    },
+    {
+      "hour": 20,
+      "datetime": "2026-07-04T19:00:00+02:00",
+      "price_eur_mwh": 99.81,
+      "price_eur_kwh": 0.0998,
+      "price_cent_kwh": 9.98
+    },
+    {
+      "hour": 21,
+      "datetime": "2026-07-04T20:00:00+02:00",
+      "price_eur_mwh": 119.95,
+      "price_eur_kwh": 0.1199,
+      "price_cent_kwh": 11.99
+    },
+    {
+      "hour": 22,
+      "datetime": "2026-07-04T21:00:00+02:00",
+      "price_eur_mwh": 129.93,
+      "price_eur_kwh": 0.1299,
+      "price_cent_kwh": 12.99
+    },
+    {
+      "hour": 23,
+      "datetime": "2026-07-04T22:00:00+02:00",
+      "price_eur_mwh": 128.76,
+      "price_eur_kwh": 0.1288,
+      "price_cent_kwh": 12.88
+    },
+    {
+      "hour": 24,
+      "datetime": "2026-07-04T23:00:00+02:00",
+      "price_eur_mwh": 130.0,
+      "price_eur_kwh": 0.13,
+      "price_cent_kwh": 13.0
+    }
+  ]
+}
