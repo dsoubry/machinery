@@ -2,14 +2,14 @@
   "metadata": {
     "source": "ENTSO-E",
     "date": "2026-08-18",
-    "retrieved_at": "2026-08-17T16:00:42.955835",
+    "retrieved_at": "2026-08-18T16:04:55.017181",
     "timezone": "Europe/Brussels",
     "data_points": 24,
     "resolution": "PT60M",
     "statistics": {
       "average_eur_mwh": 161.95,
       "min_eur_mwh": 131.0,
-      "max_eur_mwh": 200.97,
+      "max_eur_mwh": 200.96,
       "min_hour": 15,
       "max_hour": 21,
       "price_spread": 69.96
@@ -190,7 +190,7 @@
     {
       "hour": 21,
       "datetime": "2026-08-18T20:00:00+02:00",
-      "price_eur_mwh": 200.97,
+      "price_eur_mwh": 200.96,
       "price_eur_kwh": 0.201,
       "price_cent_kwh": 20.1
     },
