@@ -2,12 +2,12 @@
   "metadata": {
     "source": "ENTSO-E",
     "date": "2026-08-19",
-    "retrieved_at": "2026-08-18T16:04:59.202505",
+    "retrieved_at": "2026-08-19T16:05:40.807240",
     "timezone": "Europe/Brussels",
     "data_points": 24,
     "resolution": "PT60M",
     "statistics": {
-      "average_eur_mwh": 164.94,
+      "average_eur_mwh": 166.42,
       "min_eur_mwh": 128.61,
       "max_eur_mwh": 209.53,
       "min_hour": 15,
@@ -50,9 +50,9 @@
     {
       "hour": 1,
       "datetime": "2026-08-19T00:00:00+02:00",
-      "price_eur_mwh": 141.28,
-      "price_eur_kwh": 0.1413,
-      "price_cent_kwh": 14.13
+      "price_eur_mwh": 176.6,
+      "price_eur_kwh": 0.1766,
+      "price_cent_kwh": 17.66
     },
     {
       "hour": 2,
@@ -78,7 +78,7 @@
     {
       "hour": 5,
       "datetime": "2026-08-19T04:00:00+02:00",
-      "price_eur_mwh": 149.0,
+      "price_eur_mwh": 148.99,
       "price_eur_kwh": 0.149,
       "price_cent_kwh": 14.9
     },
@@ -106,7 +106,7 @@
     {
       "hour": 9,
       "datetime": "2026-08-19T08:00:00+02:00",
-      "price_eur_mwh": 190.87,
+      "price_eur_mwh": 190.86,
       "price_eur_kwh": 0.1909,
       "price_cent_kwh": 19.09
     },
