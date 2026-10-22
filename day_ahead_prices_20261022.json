@@ -2,7 +2,7 @@
   "metadata": {
     "source": "ENTSO-E",
     "date": "2026-10-22",
-    "retrieved_at": "2026-10-21T20:10:01.012841",
+    "retrieved_at": "2026-10-22T20:06:27.149870",
     "timezone": "Europe/Brussels",
     "data_points": 24,
     "resolution": "PT60M",
@@ -85,7 +85,7 @@
     {
       "hour": 6,
       "datetime": "2026-10-22T05:00:00+02:00",
-      "price_eur_mwh": 97.89,
+      "price_eur_mwh": 97.88,
       "price_eur_kwh": 0.0979,
       "price_cent_kwh": 9.79
     },
@@ -134,7 +134,7 @@
     {
       "hour": 13,
       "datetime": "2026-10-22T12:00:00+02:00",
-      "price_eur_mwh": 87.8,
+      "price_eur_mwh": 87.81,
       "price_eur_kwh": 0.0878,
       "price_cent_kwh": 8.78
     },
@@ -162,7 +162,7 @@
     {
       "hour": 17,
       "datetime": "2026-10-22T16:00:00+02:00",
-      "price_eur_mwh": 175.55,
+      "price_eur_mwh": 175.56,
       "price_eur_kwh": 0.1756,
       "price_cent_kwh": 17.56
     },
